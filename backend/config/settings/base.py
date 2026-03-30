@@ -56,6 +56,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
     "django_celery_beat",
@@ -174,7 +175,7 @@ MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media"))
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "apps.api.authentication.CookieJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -195,6 +196,8 @@ REST_FRAMEWORK = {
         "anon_sustained": "200/day",
         "user_burst": "60/minute",
         "user_sustained": "2000/day",
+        "login": "5/minute",
+        "register": "3/minute",
     },
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
@@ -216,6 +219,8 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_SECURE": not DEBUG,
     "AUTH_COOKIE_SAMESITE": "Lax",
     "AUTH_COOKIE_PATH": "/",
+    "AUTH_COOKIE_REFRESH": "refresh_token",
+    "AUTH_COOKIE_REFRESH_PATH": "/api/auth/token/refresh/",
 }
 
 # ---------------------------------------------------------------------------
