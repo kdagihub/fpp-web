@@ -56,6 +56,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
     "django_celery_beat",
@@ -174,7 +175,7 @@ MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media"))
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "apps.api.authentication.CookieJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -195,6 +196,8 @@ REST_FRAMEWORK = {
         "anon_sustained": "200/day",
         "user_burst": "60/minute",
         "user_sustained": "2000/day",
+        "login": "5/minute",
+        "register": "3/minute",
     },
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
@@ -216,6 +219,8 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_SECURE": not DEBUG,
     "AUTH_COOKIE_SAMESITE": "Lax",
     "AUTH_COOKIE_PATH": "/",
+    "AUTH_COOKIE_REFRESH": "refresh_token",
+    "AUTH_COOKIE_REFRESH_PATH": "/api/auth/token/refresh/",
 }
 
 # ---------------------------------------------------------------------------
@@ -258,17 +263,24 @@ CACHES = {
 }
 
 # ---------------------------------------------------------------------------
-# Email
+# Email (Hostinger SMTP — port 465 = SSL implicite)
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = env("EMAIL_HOST", default="smtp.example.com")
-EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="smtp.hostinger.com")
+EMAIL_PORT = env.int("EMAIL_PORT", default=465)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@fpp.com")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=True)
+EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=30)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="info@fpp-ci.online")
+SERVER_EMAIL = env("SERVER_EMAIL", default="info@fpp-ci.online")
 
 # ---------------------------------------------------------------------------
 # Divers
 # ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+
+MATRICULE_SECRET_KEY = env("MATRICULE_SECRET_KEY", default="change-me-in-production")

@@ -63,7 +63,7 @@ class UserPartyRole(TimeStampedModel):
         blank=True,
         related_name="roles_assigned",
     )
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, db_index=True)
     ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta(TimeStampedModel.Meta):

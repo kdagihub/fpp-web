@@ -15,3 +15,11 @@ class UserBurstThrottle(UserRateThrottle):
 
 class UserSustainedThrottle(UserRateThrottle):
     scope = "user_sustained"
+
+
+class LoginThrottle(AnonRateThrottle):
+    scope = "login"
+
+
+class RegisterThrottle(AnonRateThrottle):
+    scope = "register"

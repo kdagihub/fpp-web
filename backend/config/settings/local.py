@@ -21,7 +21,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://10.0.2.2:5173",
 ]
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = env(  # noqa: F405
+    "EMAIL_BACKEND",
+    default="django.core.mail.backends.smtp.EmailBackend",
+)
 
 SIMPLE_JWT["AUTH_COOKIE_SECURE"] = False  # noqa: F405
 
