@@ -1,31 +1,26 @@
+import datetime
+
 from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.tokens import default_token_generator
+from django.db import transaction
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import serializers
 
 from apps.accounts.models import User
-from apps.members.models import MemberProfile
 
 
 class RegisterSerializer(serializers.Serializer):
-    """Inscription — crée un User + MemberProfile."""
+    """Phase 1 — inscription sympathisant (User seul, pas de MemberProfile)."""
 
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=8)
     password_confirm = serializers.CharField(write_only=True)
     first_name = serializers.CharField(max_length=100)
     last_name = serializers.CharField(max_length=100)
+    sex = serializers.ChoiceField(choices=User.SexChoices.choices)
     phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
-
-    sex = serializers.ChoiceField(choices=MemberProfile.SexChoices.choices)
-    date_of_birth = serializers.DateField(required=False, allow_null=True)
-    city = serializers.CharField(max_length=100)
-    commune = serializers.CharField(max_length=100)
-    region = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    profession = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    neighborhood = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    motivation = serializers.CharField(required=False, allow_blank=True)
+    date_of_birth = serializers.DateField()
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
@@ -37,6 +32,13 @@ class RegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError("Un compte avec ce numéro existe déjà.")
         return value or None
 
+    def validate_date_of_birth(self, value):
+        today = datetime.date.today()
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        if age < 18:
+            raise serializers.ValidationError("Vous devez avoir au moins 18 ans pour vous inscrire.")
+        return value
+
     def validate(self, data):
         if data["password"] != data["password_confirm"]:
             raise serializers.ValidationError({"password_confirm": "Les mots de passe ne correspondent pas."})
@@ -44,27 +46,17 @@ class RegisterSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-        profile_fields = {
-            "sex": validated_data.pop("sex"),
-            "date_of_birth": validated_data.pop("date_of_birth", None),
-            "city": validated_data.pop("city"),
-            "commune": validated_data.pop("commune"),
-            "region": validated_data.pop("region", ""),
-            "profession": validated_data.pop("profession", ""),
-            "neighborhood": validated_data.pop("neighborhood", ""),
-            "motivation": validated_data.pop("motivation", ""),
-        }
         validated_data.pop("password_confirm")
-
-        user = User.objects.create_user(
-            email=validated_data["email"],
-            password=validated_data["password"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
-            phone=validated_data.get("phone"),
-        )
-
-        MemberProfile.objects.create(user=user, **profile_fields)
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=validated_data["email"],
+                password=validated_data["password"],
+                first_name=validated_data["first_name"],
+                last_name=validated_data["last_name"],
+                sex=validated_data["sex"],
+                phone=validated_data.get("phone"),
+                date_of_birth=validated_data["date_of_birth"],
+            )
         return user
 
 
@@ -80,37 +72,47 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Email ou mot de passe incorrect.")
         if not user.is_active:
             raise serializers.ValidationError("Ce compte a été désactivé.")
+        if not user.email_verified:
+            raise serializers.ValidationError(
+                "Votre email n'est pas encore vérifié. "
+                "Consultez votre boîte de réception ou demandez un nouvel email de vérification."
+            )
         data["user"] = user
         return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """Profil de l'utilisateur connecté (GET /api/auth/me/)."""
+    """Profil complet — gère le cas où member_profile n'existe pas (sympathisant)."""
 
-    matricule = serializers.CharField(source="member_profile.matricule", read_only=True)
-    sex = serializers.CharField(source="member_profile.sex", read_only=True)
-    date_of_birth = serializers.DateField(source="member_profile.date_of_birth", read_only=True)
-    city = serializers.CharField(source="member_profile.city", read_only=True)
-    commune = serializers.CharField(source="member_profile.commune", read_only=True)
-    region = serializers.CharField(source="member_profile.region", read_only=True)
-    neighborhood = serializers.CharField(source="member_profile.neighborhood", read_only=True)
-    profession = serializers.CharField(source="member_profile.profession", read_only=True)
-    membership_status = serializers.CharField(source="member_profile.membership_status", read_only=True)
-    membership_date = serializers.DateTimeField(source="member_profile.membership_date", read_only=True)
-
+    membership = serializers.SerializerMethodField()
     active_roles = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
-            "id", "email", "phone", "first_name", "last_name", "avatar",
-            "is_staff", "is_active", "created_at",
-            "matricule", "sex", "date_of_birth", "city", "commune",
-            "region", "neighborhood", "profession",
-            "membership_status", "membership_date",
-            "active_roles",
+            "id", "email", "email_verified", "phone", "first_name", "last_name", "sex",
+            "date_of_birth", "avatar", "is_staff", "is_active", "created_at",
+            "membership", "active_roles",
         ]
-        read_only_fields = ["id", "email", "is_staff", "is_active", "created_at"]
+        read_only_fields = ["id", "email", "email_verified", "is_staff", "is_active", "created_at"]
+
+    def get_membership(self, obj):
+        profile = getattr(obj, "member_profile", None)
+        if profile is None:
+            return None
+        return {
+            "matricule": profile.matricule,
+            "status": profile.membership_status,
+            "id_document_type": profile.id_document_type,
+            "id_document_number": profile.id_document_number,
+            "city": profile.city,
+            "commune": profile.commune,
+            "region": profile.region,
+            "neighborhood": profile.neighborhood,
+            "profession": profile.profession,
+            "membership_validated_at": profile.membership_date.isoformat() if profile.membership_date else None,
+            "membership_requested_at": profile.created_at.isoformat() if profile.created_at else None,
+        }
 
     def get_active_roles(self, obj):
         roles = obj.party_roles.filter(is_active=True).select_related("role", "zone")

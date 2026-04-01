@@ -60,13 +60,16 @@ class Article(TimeStampedModel):
         blank=True,
         related_name="articles",
     )
-    is_featured = models.BooleanField(default=False)
-    published_at = models.DateTimeField(null=True, blank=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    published_at = models.DateTimeField(null=True, blank=True, db_index=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Article"
         verbose_name_plural = "Articles"
+        indexes = [
+            models.Index(fields=["status", "-published_at"], name="idx_article_status_pub"),
+        ]
 
     def __str__(self):
         return self.title

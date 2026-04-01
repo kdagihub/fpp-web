@@ -1,5 +1,3 @@
-import datetime
-
 from django.conf import settings
 from django.db import models
 
@@ -7,17 +5,18 @@ from apps.core.models import TimeStampedModel
 
 
 class MemberProfile(TimeStampedModel):
-    """Profil militant — lié 1:1 au User, créé à l'inscription."""
-
-    class SexChoices(models.TextChoices):
-        MALE = "M", "Masculin"
-        FEMALE = "F", "Féminin"
+    """Profil membre — créé à la demande d'adhésion (Phase 2), pas à l'inscription."""
 
     class StatusChoices(models.TextChoices):
         PENDING = "pending", "En attente"
         VALIDATED = "validated", "Validé"
         SUSPENDED = "suspended", "Suspendu"
         REJECTED = "rejected", "Rejeté"
+
+    class IdDocumentType(models.TextChoices):
+        CNI = "cni", "Carte Nationale d'Identité"
+        PASSPORT = "passport", "Passeport"
+        DRIVER_LICENSE = "driver_license", "Permis de conduire"
 
     class SourceChoices(models.TextChoices):
         WEB = "web", "Site web"
@@ -29,9 +28,15 @@ class MemberProfile(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="member_profile",
     )
-    matricule = models.CharField(max_length=20, unique=True, blank=True, db_index=True)
-    sex = models.CharField(max_length=1, choices=SexChoices.choices)
-    date_of_birth = models.DateField(null=True, blank=True)
+    matricule = models.CharField(max_length=30, unique=True, blank=True, null=True, db_index=True)
+    id_document_type = models.CharField(
+        max_length=20,
+        choices=IdDocumentType.choices,
+        default=IdDocumentType.CNI,
+    )
+    id_document_number = models.CharField(max_length=30, unique=True, db_index=True)
+    id_document_scan = models.ImageField(upload_to="members/id_documents/")
+    photo = models.ImageField(upload_to="members/photos/")
     profession = models.CharField(max_length=100, blank=True, default="")
     address = models.TextField(blank=True, default="")
     region = models.CharField(max_length=100, blank=True, default="", db_index=True)
@@ -51,31 +56,11 @@ class MemberProfile(TimeStampedModel):
         choices=SourceChoices.choices,
         default=SourceChoices.WEB,
     )
-    photo = models.ImageField(upload_to="members/photos/", blank=True, null=True)
 
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Profil membre"
         verbose_name_plural = "Profils membres"
 
     def __str__(self):
-        return f"{self.matricule} — {self.user.full_name}"
-
-    def save(self, *args, **kwargs):
-        if not self.matricule:
-            self.matricule = self._generate_matricule()
-        super().save(*args, **kwargs)
-
-    @staticmethod
-    def _generate_matricule():
-        year = datetime.date.today().year
-        last = (
-            MemberProfile.objects.filter(matricule__startswith=f"FPP-{year}-")
-            .order_by("-matricule")
-            .values_list("matricule", flat=True)
-            .first()
-        )
-        if last:
-            seq = int(last.split("-")[-1]) + 1
-        else:
-            seq = 1
-        return f"FPP-{year}-{seq:05d}"
+        label = self.matricule or "en attente"
+        return f"{label} — {self.user.full_name}"

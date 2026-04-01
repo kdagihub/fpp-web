@@ -12,7 +12,7 @@ class Zone(TimeStampedModel):
         COMMUNE = "commune", "Commune"
         QUARTIER = "quartier", "Quartier"
 
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, db_index=True)
     type = models.CharField(max_length=20, choices=TypeChoices.choices, db_index=True)
     parent = models.ForeignKey(
         "self",

@@ -11,7 +11,7 @@ class ContactMessage(TimeStampedModel):
     phone = models.CharField(max_length=20, blank=True, default="")
     subject = models.CharField(max_length=200)
     message = models.TextField()
-    is_read = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False, db_index=True)
     read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta(TimeStampedModel.Meta):

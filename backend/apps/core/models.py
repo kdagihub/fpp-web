@@ -48,6 +48,11 @@ class AuditLog(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Journal d'audit"
         verbose_name_plural = "Journaux d'audit"
+        indexes = [
+            models.Index(fields=["entity_type", "entity_id"], name="idx_audit_entity"),
+            models.Index(fields=["user", "action"], name="idx_audit_user_action"),
+            models.Index(fields=["user", "created_at"], name="idx_audit_user_date"),
+        ]
 
     def __str__(self):
         return f"{self.action} — {self.entity_type} ({self.entity_id}) par {self.user}"

@@ -36,6 +36,9 @@ class UserSession(TimeStampedModel):
     class Meta(TimeStampedModel.Meta):
         verbose_name = "Session utilisateur"
         verbose_name_plural = "Sessions utilisateurs"
+        indexes = [
+            models.Index(fields=["user", "is_active"], name="idx_session_user_active"),
+        ]
 
     def __str__(self):
         status = "active" if self.is_active else "terminée"

@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.core.cache import cache
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -8,6 +10,10 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+
+from apps.accounts.models import User
 from apps.api.serializers.auth import (
     LoginSerializer,
     PasswordChangeSerializer,
@@ -22,6 +28,8 @@ from apps.api.utils import delete_jwt_cookies, get_client_ip, set_jwt_cookies
 from apps.core.mixins import AuditMixin
 from apps.core.models import AuditLog
 from apps.user_sessions.models import UserSession
+
+REFRESH_GRACE_SECONDS = 30
 
 
 def _create_session(user, request, refresh_token):
@@ -85,8 +93,14 @@ class RegisterView(APIView):
             request=request,
         )
 
+        from apps.accounts.tasks import send_email_verification
+        send_email_verification.delay(str(user.pk))
+
         return Response(
-            {"detail": "Inscription réussie. Votre adhésion est en attente de validation."},
+            {
+                "detail": "Compte créé. Un email de vérification a été envoyé à votre adresse. "
+                "Veuillez vérifier votre boîte de réception pour activer votre compte."
+            },
             status=status.HTTP_201_CREATED,
         )
 
@@ -100,18 +114,17 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
 
-        refresh = RefreshToken.for_user(user)
-        access = refresh.access_token
-
-        _create_session(user, request, refresh)
-
-        AuditMixin.log_action(
-            user=user,
-            action=AuditLog.ActionChoices.LOGIN,
-            entity_type="User",
-            entity_id=user.pk,
-            request=request,
-        )
+        with transaction.atomic():
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+            _create_session(user, request, refresh)
+            AuditMixin.log_action(
+                user=user,
+                action=AuditLog.ActionChoices.LOGIN,
+                entity_type="User",
+                entity_id=user.pk,
+                request=request,
+            )
 
         response = Response({"detail": "Connexion réussie."}, status=status.HTTP_200_OK)
         set_jwt_cookies(response, access, refresh)
@@ -126,28 +139,29 @@ class LogoutView(APIView):
             settings.SIMPLE_JWT.get("AUTH_COOKIE_REFRESH", "refresh_token")
         )
 
-        if refresh_token:
-            try:
-                token = RefreshToken(refresh_token)
-                jti = token.payload.get("jti", "")
-                token.blacklist()
-            except (TokenError, InvalidToken):
-                jti = ""
+        with transaction.atomic():
+            if refresh_token:
+                try:
+                    token = RefreshToken(refresh_token)
+                    jti = token.payload.get("jti", "")
+                    token.blacklist()
+                except (TokenError, InvalidToken):
+                    jti = ""
 
-            if jti:
-                UserSession.objects.filter(
-                    user=request.user,
-                    session_key=jti,
-                    is_active=True,
-                ).update(is_active=False, ended_at=timezone.now())
+                if jti:
+                    UserSession.objects.filter(
+                        user=request.user,
+                        session_key=jti,
+                        is_active=True,
+                    ).update(is_active=False, ended_at=timezone.now())
 
-        AuditMixin.log_action(
-            user=request.user,
-            action=AuditLog.ActionChoices.LOGOUT,
-            entity_type="User",
-            entity_id=request.user.pk,
-            request=request,
-        )
+            AuditMixin.log_action(
+                user=request.user,
+                action=AuditLog.ActionChoices.LOGOUT,
+                entity_type="User",
+                entity_id=request.user.pk,
+                request=request,
+            )
 
         response = Response({"detail": "Déconnexion réussie."}, status=status.HTTP_200_OK)
         delete_jwt_cookies(response)
@@ -158,7 +172,13 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserProfileSerializer(request.user)
+        user = (
+            User.objects
+            .select_related("member_profile")
+            .prefetch_related("party_roles__role", "party_roles__zone")
+            .get(pk=request.user.pk)
+        )
+        serializer = UserProfileSerializer(user)
         return Response(serializer.data)
 
     def patch(self, request):
@@ -167,7 +187,14 @@ class MeView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(UserProfileSerializer(request.user).data)
+
+        user = (
+            User.objects
+            .select_related("member_profile")
+            .prefetch_related("party_roles__role", "party_roles__zone")
+            .get(pk=request.user.pk)
+        )
+        return Response(UserProfileSerializer(user).data)
 
 
 class PasswordChangeView(APIView):
@@ -177,10 +204,10 @@ class PasswordChangeView(APIView):
         serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
 
-        request.user.set_password(serializer.validated_data["new_password"])
-        request.user.save(update_fields=["password"])
-
-        OutstandingToken.objects.filter(user=request.user).delete()
+        with transaction.atomic():
+            request.user.set_password(serializer.validated_data["new_password"])
+            request.user.save(update_fields=["password"])
+            OutstandingToken.objects.filter(user=request.user).delete()
 
         response = Response({"detail": "Mot de passe modifié. Veuillez vous reconnecter."})
         delete_jwt_cookies(response)
@@ -196,9 +223,12 @@ class PasswordResetView(APIView):
         reset_data = serializer.get_reset_data()
 
         if reset_data:
-            # TODO: envoyer l'email via Celery task
-            # Pour le moment, log le lien de reset pour le développement
-            pass
+            from apps.accounts.tasks import send_password_reset_email
+            send_password_reset_email.delay(
+                str(reset_data["user"].pk),
+                reset_data["uid"],
+                reset_data["token"],
+            )
 
         return Response(
             {"detail": "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."}
@@ -213,16 +243,21 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
-        user.set_password(serializer.validated_data["new_password"])
-        user.save(update_fields=["password"])
 
-        OutstandingToken.objects.filter(user=user).delete()
+        with transaction.atomic():
+            user.set_password(serializer.validated_data["new_password"])
+            user.save(update_fields=["password"])
+            OutstandingToken.objects.filter(user=user).delete()
 
         return Response({"detail": "Mot de passe réinitialisé avec succès."})
 
 
 class CookieTokenRefreshView(APIView):
-    """Lit le refresh token depuis le cookie, retourne un nouveau access + refresh."""
+    """
+    Lit le refresh token depuis le cookie, retourne un nouveau access + refresh.
+    Grace period de 30s : si le même refresh arrive 2 fois (réseau instable),
+    on retourne les tokens cachés au lieu de rejeter.
+    """
 
     permission_classes = [AllowAny]
 
@@ -237,26 +272,31 @@ class CookieTokenRefreshView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        cache_key = f"token_refresh_grace:{hash(refresh_cookie)}"
+        cached = cache.get(cache_key)
+        if cached:
+            response = Response({"detail": "Token rafraîchi."})
+            set_jwt_cookies(response, cached["access"], cached["refresh"])
+            return response
+
         try:
             old_token = RefreshToken(refresh_cookie)
-            new_access = old_token.access_token
 
-            # ROTATE_REFRESH_TOKENS=True → on génère un nouveau refresh
-            from apps.accounts.models import User
             user = User.objects.get(pk=old_token.payload["user_id"])
-            new_refresh = RefreshToken.for_user(user)
 
-            # Blackliste l'ancien
-            old_token.blacklist()
+            with transaction.atomic():
+                new_refresh = RefreshToken.for_user(user)
+                new_access = new_refresh.access_token
+                old_token.blacklist()
 
-            old_jti = old_token.payload.get("jti", "")
-            new_jti = new_refresh.payload.get("jti", "")
-            if old_jti and new_jti:
-                UserSession.objects.filter(
-                    user=user,
-                    session_key=old_jti,
-                    is_active=True,
-                ).update(session_key=new_jti)
+                old_jti = old_token.payload.get("jti", "")
+                new_jti = new_refresh.payload.get("jti", "")
+                if old_jti and new_jti:
+                    UserSession.objects.filter(
+                        user=user,
+                        session_key=old_jti,
+                        is_active=True,
+                    ).update(session_key=new_jti)
 
         except (TokenError, InvalidToken, User.DoesNotExist):
             response = Response(
@@ -266,6 +306,91 @@ class CookieTokenRefreshView(APIView):
             delete_jwt_cookies(response)
             return response
 
+        cache.set(cache_key, {
+            "access": str(new_access),
+            "refresh": str(new_refresh),
+        }, REFRESH_GRACE_SECONDS)
+
         response = Response({"detail": "Token rafraîchi."})
         set_jwt_cookies(response, new_access, new_refresh)
         return response
+
+
+class VerifyEmailView(APIView):
+    """Vérifie l'email de l'utilisateur via uid + token (lien envoyé par mail)."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid_encoded = request.data.get("uid")
+        token = request.data.get("token")
+
+        if not uid_encoded or not token:
+            return Response(
+                {"detail": "uid et token sont requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            uid = urlsafe_base64_decode(uid_encoded).decode()
+            user = User.objects.get(pk=uid)
+        except (ValueError, TypeError, User.DoesNotExist):
+            return Response(
+                {"detail": "Lien de vérification invalide."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.email_verified:
+            return Response({"detail": "Cet email est déjà vérifié."})
+
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Le lien de vérification a expiré ou est invalide."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            user.email_verified = True
+            user.save(update_fields=["email_verified", "updated_at"])
+
+        AuditMixin.log_action(
+            user=user,
+            action=AuditLog.ActionChoices.UPDATE,
+            entity_type="User",
+            entity_id=user.pk,
+            changes={"email_verified": True},
+            request=request,
+        )
+
+        from apps.accounts.tasks import send_welcome_email
+        send_welcome_email.delay(str(user.pk))
+
+        return Response({"detail": "Email vérifié avec succès. Vous pouvez maintenant vous connecter."})
+
+
+class ResendVerificationView(APIView):
+    """Renvoie l'email de vérification. Throttled pour éviter les abus."""
+
+    permission_classes = [AllowAny]
+    throttle_classes = [RegisterThrottle]
+
+    def post(self, request):
+        email = request.data.get("email", "").lower().strip()
+        if not email:
+            return Response(
+                {"detail": "L'email est requis."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = User.objects.get(email=email, is_active=True)
+        except User.DoesNotExist:
+            pass
+        else:
+            if not user.email_verified:
+                from apps.accounts.tasks import send_email_verification
+                send_email_verification.delay(str(user.pk))
+
+        return Response(
+            {"detail": "Si un compte non vérifié existe avec cet email, un nouveau lien a été envoyé."}
+        )

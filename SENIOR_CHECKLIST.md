@@ -211,3 +211,95 @@ Chaque item est classé par axe, priorisé, et référence le fichier concerné.
 14. Multiple workers Gunicorn
 15. Séparation bases Redis
 16. CursorPagination
+
+
+
+
+J'ai tout analysé. Voici l'explication complète et l'audit de sécurité JWT.
+
+---
+
+## JWT vs Session — Explication concrète pour le projet FPP
+
+### Session Authentication (classique Django)
+
+```
+Login → Le serveur crée une entrée en base (session table)
+      → Le serveur envoie un cookie "sessionid=abc123" au navigateur
+      → À chaque requête, le navigateur envoie ce cookie
+      → Le serveur lit "abc123", cherche en base la session, trouve le user
+```
+
+**Avantages :**
+- Simple, natif Django
+- Facile à révoquer (supprimer la ligne en base = déconnexion immédiate)
+- Un seul cookie opaque (pas de données sensibles côté client)
+
+**Inconvénients :**
+- **Chaque requête** = 1 requête DB pour lire la session → scalabilité limitée
+- **Stateful** : le serveur doit stocker l'état. Si tu as 3 serveurs derrière un load balancer, il faut un "sticky session" ou un store Redis partagé
+- **Pas adapté aux apps mobile** : Flutter/mobile ne gère pas nativement les cookies de session Django
+
+### JWT Authentication (notre choix)
+
+```
+Login → Le serveur génère 2 tokens signés (access 15min + refresh 7j)
+      → Les tokens contiennent le user_id encodé + signé cryptographiquement
+      → À chaque requête, le serveur vérifie la signature (pas de DB)
+      → Le refresh token permet de renouveler l'access token
+```
+
+**Avantages :**
+- **Stateless** : pas besoin de chercher en base à chaque requête → bien plus performant
+- **Scalable** : 10 serveurs peuvent vérifier le même JWT indépendamment
+- **Multi-plateforme** : fonctionne pour le web (Vue.js), le mobile (Flutter), et les API tierces
+- **Cross-domain** : le frontend sur `fpp-ci.online` et l'API sur `api.fpp-ci.online` peuvent communiquer
+
+**Inconvénients :**
+- Révocation complexe (d'où le blacklist qu'on utilise)
+- Si mal stocké (localStorage), vulnérable au XSS
+
+### Pourquoi JWT est le bon choix pour FPP
+
+Ton architecture = **frontend séparé** (Vue.js sur `fpp-ci.online`) + **API** (Django sur `api.fpp-ci.online`) + **future app Flutter**. C'est exactement le cas d'usage pour JWT. L'auth session ne fonctionnerait pas bien en cross-domain.
+
+---
+
+## Audit sécurité de notre implémentation JWT — Résultat
+
+| Critère de sécurité | Statut | Implémentation |
+|---|---|---|
+| **Tokens en cookies httpOnly** | **OK** | `AUTH_COOKIE_HTTP_ONLY: True` dans `set_jwt_cookies()` — JavaScript ne peut PAS lire les tokens |
+| **Flag Secure (HTTPS only)** | **OK** | `AUTH_COOKIE_SECURE: True` en prod, `False` en local |
+| **SameSite=Lax** | **OK** | Protège contre les CSRF simples (formulaires cross-site) |
+| **Refresh token path restreint** | **OK** | `AUTH_COOKIE_REFRESH_PATH: /api/auth/token/refresh/` — le cookie refresh n'est envoyé QUE vers cet endpoint |
+| **Rotation des refresh tokens** | **OK** | `ROTATE_REFRESH_TOKENS: True` — chaque refresh génère un nouveau refresh |
+| **Blacklist après rotation** | **OK** | `BLACKLIST_AFTER_ROTATION: True` — l'ancien refresh est invalidé |
+| **Access token courte durée** | **OK** | 15 minutes (`JWT_ACCESS_TOKEN_LIFETIME=15`) |
+| **Grace period idempotence** | **OK** | `CookieTokenRefreshView` avec cache Redis 30s pour réseau instable |
+| **Logout = blacklist + session fermée** | **OK** | `LogoutView` blacklist le token + ferme la `UserSession` |
+| **Password change = révoque tout** | **OK** | `PasswordChangeView` supprime tous les `OutstandingToken` |
+| **Fallback header Authorization** | **OK** | `CookieJWTAuthentication` — cookie d'abord, puis header (pour Flutter/tests) |
+
+**Verdict : notre JWT est correctement sécurisé.** Les tokens sont bien dans des cookies `httpOnly` + `Secure` + `SameSite=Lax`, ce qui est la configuration recommandée par l'OWASP pour les SPA.
+
+---
+
+## Bilan des phases SENIOR_CHECKLIST
+
+| Phase | Statut |
+|---|---|
+| **Phase 1** — Transactions atomiques, race condition, Celery tasks, idempotence refresh | **TERMINEE** |
+| **Phase 2** — Versioning API, error handler, N+1, throttle avancé, validation, tâches périodiques | **A FAIRE** |
+| **Phase 3** — Cache Redis, health check, service layer, workers Gunicorn, Redis séparation | **A FAIRE** |
+
+Concernant ta question "est-ce qu'on peut passer à autre chose" : **oui**. Le système d'authentification est complet et sécurisé. On peut maintenant attaquer les APIs du cahier des charges (Plan.md) tout en intégrant progressivement les items de Phase 2 du checklist *au fur et à mesure*.
+
+La prochaine étape logique selon le cahier des charges serait d'implémenter les **APIs du MVP** :
+
+1. **Content (Blog/Actualités)** — CRUD articles, catégories, publication
+2. **Contact** — formulaire de contact, gestion messages
+3. **Dashboard admin** — statistiques (nombre membres, adhésions récentes, répartition par ville)
+4. **Members admin** — liste paginée, filtres, recherche, export Excel/CSV
+
+Veux-tu qu'on attaque ces blocs ? Si oui, par lequel souhaites-tu commencer ?

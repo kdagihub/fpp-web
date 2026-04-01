@@ -1,0 +1,326 @@
+{
+  "categories": [
+    {
+      "id": "fondamentaux",
+      "title": "A. Fondamentaux Backend (non négociables)",
+      "icon": "🧠",
+      "color": "#6366f1",
+      "skills": [
+        {
+          "id": "http_rest",
+          "text": "HTTP / REST / Architecture Web",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "concurrency",
+          "text": "Concurrency (threads, async, workers)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "transactions_db",
+          "text": "Transactions DB / Isolation levels",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "scalabilite",
+          "text": "Scalabilité (horizontal vs vertical)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "cache",
+          "text": "Cache (Redis, stratégie d'invalidation)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "securite_base",
+          "text": "Sécurité (auth, CSRF, XSS, injections)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "design_patterns",
+          "text": "Design patterns (services, repository, etc.)",
+          "checked": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "django_profond",
+      "title": "B. Django Profond (pas juste CRUD)",
+      "icon": "⚙️",
+      "color": "#059669",
+      "skills": [
+        {
+          "id": "django_orm",
+          "text": "Django ORM (optimisation, annotate, select_related, prefetch_related)",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "django_signals",
+          "text": "Django signals (quand les éviter surtout)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "middleware",
+          "text": "Middleware (custom logic)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "django_channels",
+          "text": "Django Channels / Async",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "permissions_auth",
+          "text": "Permissions & auth custom",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "archi_propre",
+          "text": "Architecture propre (pas tout dans views.py)",
+          "checked": true,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "celery_redis",
+      "title": "C. Celery / Redis / Async",
+      "icon": "🚀",
+      "color": "#dc2626",
+      "skills": [
+        {
+          "id": "queue_mgmt",
+          "text": "Queue management",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "retry_strategy",
+          "text": "Retry strategy",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "idempotence",
+          "text": "Idempotence",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "monitoring_tasks",
+          "text": "Monitoring des tasks",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "celery_beat",
+          "text": "Scheduling (Celery Beat)",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "failure_mgmt",
+          "text": "Gestion des failures",
+          "checked": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "archi_prod",
+      "title": "D. Architecture & Production",
+      "icon": "🏗️",
+      "color": "#ea580c",
+      "skills": [
+        {
+          "id": "mono_vs_micro",
+          "text": "Monolithe vs Microservices",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "docker",
+          "text": "Docker / Orchestration",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "ci_cd",
+          "text": "CI/CD",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "logs_monitoring",
+          "text": "Logs / Monitoring",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "migrations_prod",
+          "text": "Gestion des migrations en prod",
+          "checked": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "securite_robustesse",
+      "title": "E. Sécurité & Robustesse",
+      "icon": "🔐",
+      "color": "#7c3aed",
+      "skills": [
+        {
+          "id": "jwt_vs_session",
+          "text": "JWT vs Session auth",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "rate_limiting",
+          "text": "Rate limiting",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "protection_api",
+          "text": "Protection API publique",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "gestion_secrets",
+          "text": "Gestion des secrets",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "audit_logging",
+          "text": "Audit / Logging",
+          "checked": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "vision_engineering",
+      "title": "F. Vision Engineering (Ingénieur Logiciel)",
+      "icon": "🔬",
+      "color": "#0891b2",
+      "skills": [
+        {
+          "id": "tradeoffs",
+          "text": "Arbitrages (Trade-offs) : savoir expliquer pourquoi choisir une techno plutôt qu'une autre",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "tests",
+          "text": "Fiabilité & Tests : unitaires, intégration, charge",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "maintenabilite",
+          "text": "Maintenabilité : garantir la qualité long terme du code",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "infra_devops",
+          "text": "Infrastructure & DevOps : CI/CD, Docker, Kubernetes, observabilité",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "design_systeme",
+          "text": "Design Système : découper un projet complexe, anticiper les échecs",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "methodologies",
+          "text": "Méthodologies de conception (DDD, Clean Architecture, SOLID)",
+          "checked": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "leadership_senior",
+      "title": "G. Leadership & Impact (Senior)",
+      "icon": "👑",
+      "color": "#ca8a04",
+      "skills": [
+        {
+          "id": "mentorat",
+          "text": "Mentorat : guider les juniors, revues de code constructives",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "autonomie",
+          "text": "Autonomie totale sur des projets complexes",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "vision_produit",
+          "text": "Vision produit : comprendre le business, pas juste le code",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "soft_skills",
+          "text": "Soft Skills : communication avec non-techniques (PO, clients)",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "traduire_besoins",
+          "text": "Traduire des besoins business en solutions techniques",
+          "checked": false,
+          "note": ""
+        },
+        {
+          "id": "estimation",
+          "text": "Estimation réaliste des délais et complexité",
+          "checked": true,
+          "note": ""
+        },
+        {
+          "id": "documentation",
+          "text": "Documentation technique claire et maintenue",
+          "checked": false,
+          "note": ""
+        }
+      ]
+    },
+    {
+      "id": "git",
+      "title": "GIT",
+      "icon": "📌",
+      "color": "#000000",
+      "skills": [
+        {
+          "id": "commandes_de_base_0",
+          "text": "COMMANDES DE BASE",
+          "checked": true,
+          "note": ""
+        }
+      ]
+    }
+  ]
+}

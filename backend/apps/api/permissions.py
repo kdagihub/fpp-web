@@ -17,6 +17,18 @@ class IsOwnerOrAdmin(BasePermission):
         return hasattr(obj, "user") and obj.user == request.user
 
 
+class IsMember(BasePermission):
+    """Accès réservé aux membres validés (MemberProfile.membership_status = validated)."""
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        if request.user.is_superuser:
+            return True
+        profile = getattr(request.user, "member_profile", None)
+        return profile is not None and profile.membership_status == "validated"
+
+
 class HasPermission(BasePermission):
     """
     Permission générique basée sur un code permission Django.
