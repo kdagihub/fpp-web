@@ -1,0 +1,52 @@
+# FPP — Cursor Rules
+
+## Project
+
+FPP (Front Patriotique Panafricain) — Plateforme politique pour la Cote d'Ivoire.
+Backend Django 6 + DRF + PostgreSQL + Redis + Celery.
+Frontend prevu : Vue 3 + PrimeVue + Pinia + Tailwind CSS.
+Mobile futur : Flutter.
+Domaines : fpp-ci.online (frontend) / api.fpp-ci.online (backend).
+
+## Language
+
+Toujours repondre en francais.
+
+## Design Context
+
+### Brand Personality
+Audacieux, Jeune, Panafricain.
+
+### Emotions
+Espoir, Urgence, Energie, Confiance.
+
+### Style
+Swiss Modernism 2.0 + Flat Design. Light mode uniquement.
+Palette : Noir (#111111) + Blanc (#FFFFFF) + Vert accent (#16A34A). Gris teintes hue 145.
+Typo : Outfit (titres) + Work Sans (corps).
+
+### Design Principles
+1. Clarte avant tout — hierarchie visuelle forte, messages courts, CTAs explicites
+2. Mobile-first, Afrique-first — concevoir pour mobile 3G/4G, images optimisees
+3. Sobriete institutionnelle + energie jeune — noir/blanc = credibilite, vert = energie
+4. Engagement a chaque scroll — chaque section a un objectif, CTA adhesion omnipresent
+5. Accessibilite non-negociable — WCAG AA, contraste 4.5:1, navigation clavier, focus visible
+
+### References
+- Design system : `design-system/fpp/MASTER.md`
+- Design context : `.impeccable.md`
+- Skills UI/UX : `.cursor/skills/ui-ux-pro-max/` et `.cursor/skills/frontend-design/reference/`
+- Specs techniques : `SPECS.md`
+- Cahier des charges : `Plan.md`
+- Checklist senior : `SENIOR_CHECKLIST.md`
+
+### Anti-patterns
+- Pas de dark mode
+- Pas de degradees violet-bleu "AI style"
+- Pas de gris pur (toujours teinter hue 145)
+- Pas de polices Inter, Roboto, Arial
+- Pas d'emojis comme icones (SVG Lucide uniquement)
+- Pas de bounce/elastic easing
+- Pas de glassmorphism decoratif
+- Pas de cards imbriquees dans des cards
+- Pas de stock photos generiques

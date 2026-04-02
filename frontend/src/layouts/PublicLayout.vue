@@ -1,0 +1,300 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { useSettingsStore } from '@/stores/settings'
+import { useAuthStore } from '@/stores/auth'
+import { Menu, X, ArrowRight } from 'lucide-vue-next'
+import logoFpp from '@/assets/img/fpplogsf.png'
+
+const settingsStore = useSettingsStore()
+const authStore = useAuthStore()
+const route = useRoute()
+const mobileMenuOpen = ref(false)
+
+const navLinks = [
+  { to: '/', label: 'Accueil', name: 'home' },
+  { to: '/a-propos', label: 'Le Parti', name: 'about' },
+  { to: '/actualites', label: 'Actualités', name: 'news' },
+  { to: '/contact', label: 'Contact', name: 'contact' },
+]
+
+function isActive(name: string): boolean {
+  return route.name === name || (name === 'news' && route.name === 'news-detail')
+}
+
+function closeMobileMenu() {
+  mobileMenuOpen.value = false
+}
+
+onMounted(() => {
+  settingsStore.fetchSettings()
+})
+</script>
+
+<template>
+  <div class="min-h-screen flex flex-col bg-[var(--color-background)]">
+    <!-- ────── NAVBAR ────── -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-[var(--color-border)]">
+      <div class="mx-auto max-w-[var(--container-xl)] h-16 px-6 flex items-center justify-between">
+        <!-- Logo + brand -->
+        <RouterLink
+          to="/"
+          class="flex items-center gap-2.5 no-underline group"
+          @click="closeMobileMenu"
+        >
+          <img
+            :src="logoFpp"
+            alt="FPP"
+            class="h-10 w-auto"
+          >
+          <div class="flex flex-col leading-none">
+            <span class="font-heading text-xl font-extrabold tracking-tight text-[var(--color-primary)]">
+              FPP
+            </span>
+            <span class="font-heading text-[8px] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">
+              Front Patriotique Panafricain
+            </span>
+          </div>
+        </RouterLink>
+
+        <!-- Desktop nav links — uppercase, bold, Sora font, NO green text -->
+        <div class="hidden lg:flex items-center gap-1">
+          <RouterLink
+            v-for="link in navLinks"
+            :key="link.name"
+            :to="link.to"
+            class="relative px-4 py-2 font-heading text-[13px] font-bold uppercase tracking-[0.06em] no-underline transition-colors"
+            :class="[
+              isActive(link.name)
+                ? 'text-[var(--color-primary)]'
+                : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
+            ]"
+            @click="closeMobileMenu"
+          >
+            {{ link.label }}
+            <!-- Active indicator: green underline bar -->
+            <span
+              v-if="isActive(link.name)"
+              class="absolute bottom-0 left-4 right-4 h-[2.5px] bg-[var(--color-accent)] rounded-full"
+            />
+          </RouterLink>
+        </div>
+
+        <!-- Desktop CTA -->
+        <div class="hidden lg:flex items-center gap-3">
+          <RouterLink
+            v-if="authStore.isAuthenticated && authStore.isAdmin"
+            to="/admin/dashboard"
+            class="px-4 py-2 font-heading text-[13px] font-bold uppercase tracking-[0.04em] text-[var(--color-primary)] no-underline border-2 border-[var(--color-primary)] rounded-sm transition-all hover:bg-[var(--color-primary)] hover:text-white cursor-pointer"
+          >
+            Administration
+          </RouterLink>
+          <RouterLink
+            to="/adherer"
+            class="group inline-flex items-center gap-2 px-5 py-2.5 font-heading text-[13px] font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer"
+          >
+            Adhérer
+            <ArrowRight :size="16" class="transition-transform group-hover:translate-x-0.5" />
+          </RouterLink>
+        </div>
+
+        <!-- Mobile hamburger -->
+        <button
+          class="lg:hidden p-2 cursor-pointer text-[var(--color-primary)]"
+          @click="mobileMenuOpen = !mobileMenuOpen"
+          :aria-label="mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'"
+        >
+          <X v-if="mobileMenuOpen" :size="24" />
+          <Menu v-else :size="24" />
+        </button>
+      </div>
+
+      <!-- Mobile menu -->
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 -translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 -translate-y-2"
+      >
+        <div
+          v-if="mobileMenuOpen"
+          class="lg:hidden bg-white border-b border-[var(--color-border)] px-6 pb-5"
+        >
+          <RouterLink
+            v-for="link in navLinks"
+            :key="link.name"
+            :to="link.to"
+            class="block py-3 font-heading text-sm font-bold uppercase tracking-[0.04em] no-underline border-b border-[var(--color-border)] last:border-b-0"
+            :class="[
+              isActive(link.name)
+                ? 'text-[var(--color-primary)]'
+                : 'text-[var(--color-muted)]'
+            ]"
+            @click="closeMobileMenu"
+          >
+            <span class="flex items-center justify-between">
+              {{ link.label }}
+              <span
+                v-if="isActive(link.name)"
+                class="w-2 h-2 rounded-full bg-[var(--color-accent)]"
+              />
+            </span>
+          </RouterLink>
+          <RouterLink
+            to="/adherer"
+            class="mt-4 flex items-center justify-center gap-2 w-full px-5 py-3 font-heading text-[13px] font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm cursor-pointer"
+            @click="closeMobileMenu"
+          >
+            Adhérer
+            <ArrowRight :size="16" />
+          </RouterLink>
+        </div>
+      </Transition>
+    </nav>
+
+    <!-- ────── MAIN CONTENT ────── -->
+    <main class="flex-1">
+      <RouterView />
+    </main>
+
+    <!-- ────── FOOTER ────── -->
+    <footer class="bg-[var(--color-primary)] text-white">
+      <div class="mx-auto max-w-[var(--container-xl)] px-6 py-16">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-10">
+          <!-- Col 1: Brand (spans 4) -->
+          <div class="md:col-span-4">
+            <div class="flex items-center gap-3 mb-5">
+              <img
+                :src="logoFpp"
+                alt="FPP"
+                class="h-12 w-auto invert"
+              >
+              <div>
+                <p class="font-heading text-lg font-extrabold tracking-tight leading-tight">
+                  FPP
+                </p>
+                <p class="font-heading text-xs font-medium text-white/60 uppercase tracking-[0.08em]">
+                  Front Patriotique Panafricain
+                </p>
+              </div>
+            </div>
+            <p class="text-sm text-white/50 leading-relaxed max-w-xs">
+              {{ settingsStore.settings?.slogan ?? 'Ensemble, construisons l\'avenir de la Côte d\'Ivoire.' }}
+            </p>
+          </div>
+
+          <!-- Col 2: Navigation (spans 3) -->
+          <div class="md:col-span-3">
+            <h4 class="font-heading text-xs font-bold uppercase tracking-[0.1em] text-white/40 mb-5">
+              Navigation
+            </h4>
+            <ul class="space-y-3">
+              <li v-for="link in navLinks" :key="link.name">
+                <RouterLink
+                  :to="link.to"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  {{ link.label }}
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink
+                  to="/adherer"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  Adhérer
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Col 3: Contact (spans 3) -->
+          <div class="md:col-span-3">
+            <h4 class="font-heading text-xs font-bold uppercase tracking-[0.1em] text-white/40 mb-5">
+              Contact
+            </h4>
+            <ul class="space-y-3 text-sm text-white/70">
+              <li v-if="settingsStore.settings?.email" class="font-medium">
+                {{ settingsStore.settings.email }}
+              </li>
+              <li v-if="settingsStore.settings?.phone" class="font-medium">
+                {{ settingsStore.settings.phone }}
+              </li>
+              <li v-if="settingsStore.settings?.address" class="leading-relaxed">
+                {{ settingsStore.settings.address }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Col 4: Social (spans 2) -->
+          <div class="md:col-span-2">
+            <h4 class="font-heading text-xs font-bold uppercase tracking-[0.1em] text-white/40 mb-5">
+              Réseaux
+            </h4>
+            <ul class="space-y-3">
+              <li v-if="settingsStore.settings?.facebook">
+                <a
+                  :href="settingsStore.settings.facebook"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  Facebook
+                </a>
+              </li>
+              <li v-if="settingsStore.settings?.twitter">
+                <a
+                  :href="settingsStore.settings.twitter"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  X / Twitter
+                </a>
+              </li>
+              <li v-if="settingsStore.settings?.instagram">
+                <a
+                  :href="settingsStore.settings.instagram"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  Instagram
+                </a>
+              </li>
+              <li v-if="settingsStore.settings?.youtube">
+                <a
+                  :href="settingsStore.settings.youtube"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  YouTube
+                </a>
+              </li>
+              <li v-if="settingsStore.settings?.tiktok">
+                <a
+                  :href="settingsStore.settings.tiktok"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
+                >
+                  TikTok
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Bottom bar -->
+        <div class="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p class="text-xs text-white/30 font-medium">
+            &copy; {{ new Date().getFullYear() }} Front Patriotique Panafricain. Tous droits réservés.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</template>
