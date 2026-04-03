@@ -1,24 +1,16 @@
 #!/bin/bash
 set -e
 
-# ============================================================================
-# FPP Backend — Entrypoint
-# Attend PostgreSQL, lance les migrations, collectstatic, puis le serveur.
-# ============================================================================
-
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-# ---------------------------------------------------------------------------
-# 1. Attendre que PostgreSQL soit prêt
-# ---------------------------------------------------------------------------
-echo -e "${YELLOW}[entrypoint] Attente de PostgreSQL (${POSTGRES_HOST}:${POSTGRES_PORT})...${NC}"
-
 MAX_RETRIES=30
-RETRY_COUNT=0
+PROCESS_TYPE=${PROCESS_TYPE:-web}
 
+echo "🔧 PROCESS_TYPE = ${PROCESS_TYPE}"
+
+# ---------------------------------------------------------------------------
+# 1. Attendre PostgreSQL
+# ---------------------------------------------------------------------------
+echo "⏳ Attente de PostgreSQL (${POSTGRES_HOST:-db}:${POSTGRES_PORT:-5432})..."
+retries=0
 while ! python -c "
 import socket, sys
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -29,31 +21,59 @@ try:
 except (OSError, ConnectionRefusedError):
     sys.exit(1)
 " 2>/dev/null; do
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
-        echo -e "${RED}[entrypoint] PostgreSQL non disponible après ${MAX_RETRIES} tentatives. Abandon.${NC}"
+    retries=$((retries + 1))
+    if [ $retries -ge $MAX_RETRIES ]; then
+        echo "❌ PostgreSQL injoignable après ${MAX_RETRIES} tentatives"
         exit 1
     fi
-    echo -e "${YELLOW}[entrypoint] PostgreSQL non prêt — tentative ${RETRY_COUNT}/${MAX_RETRIES}...${NC}"
+    echo "⏳ PostgreSQL non prêt — tentative ${retries}/${MAX_RETRIES}..."
     sleep 2
 done
-
-echo -e "${GREEN}[entrypoint] PostgreSQL est prêt.${NC}"
+echo "✅ PostgreSQL prêt"
 
 # ---------------------------------------------------------------------------
-# 2. Migrations (uniquement pour le service principal, pas les workers Celery)
+# 2. Attendre Redis
 # ---------------------------------------------------------------------------
-if [ "$1" = "daphne" ] || [ "$1" = "gunicorn" ]; then
-    echo -e "${YELLOW}[entrypoint] Application des migrations...${NC}"
-    python manage.py migrate --noinput
-
-    echo -e "${YELLOW}[entrypoint] Collecte des fichiers statiques...${NC}"
-    python manage.py collectstatic --noinput --clear 2>/dev/null || true
-
-    echo -e "${GREEN}[entrypoint] Backend prêt.${NC}"
+if [ -n "$REDIS_URL" ]; then
+    echo "⏳ Attente de Redis..."
+    retries=0
+    while ! python -c "
+import os, redis
+redis.from_url(os.environ['REDIS_URL'], socket_connect_timeout=2).ping()
+" 2>/dev/null; do
+        retries=$((retries + 1))
+        if [ $retries -ge $MAX_RETRIES ]; then
+            echo "❌ Redis injoignable après ${MAX_RETRIES} tentatives"
+            exit 1
+        fi
+        sleep 2
+    done
+    echo "✅ Redis prêt"
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Lancer la commande passée (daphne, celery, etc.)
+# 3. Lancer le processus selon PROCESS_TYPE
 # ---------------------------------------------------------------------------
-exec "$@"
+case "$PROCESS_TYPE" in
+    celery-worker)
+        echo "🚀 Démarrage Celery Worker"
+        exec celery -A config worker -l info --concurrency=2 --hostname=worker1@%h
+        ;;
+    celery-beat)
+        echo "🚀 Démarrage Celery Beat"
+        exec celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+        ;;
+    web)
+        echo "⏳ Migrations..."
+        python manage.py migrate --noinput
+        echo "⏳ Collectstatic..."
+        python manage.py collectstatic --noinput --clear 2>/dev/null || true
+        echo "🚀 Démarrage Daphne sur 0.0.0.0:8000"
+        exec daphne -b 0.0.0.0 -p 8000 --proxy-headers config.asgi:application
+        ;;
+    *)
+        echo "❌ PROCESS_TYPE inconnu : ${PROCESS_TYPE}"
+        echo "   Valeurs acceptées : web, celery-worker, celery-beat"
+        exit 1
+        ;;
+esac

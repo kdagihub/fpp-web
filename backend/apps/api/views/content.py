@@ -14,17 +14,30 @@ from apps.api.permissions import (
     CanDeleteArticle,
     CanEditArticle,
     CanManageCategories,
+    CanManageEvents,
+    CanManageMedia,
+    CanManageProgram,
 )
 from apps.api.serializers.content import (
     AdminArticleCreateSerializer,
     AdminArticleDetailSerializer,
     AdminArticleListSerializer,
     AdminCategorySerializer,
+    AdminEventDetailSerializer,
+    AdminEventListSerializer,
+    AdminMediaContentSerializer,
+    AdminProgramItemSerializer,
+    AdminProgramSectionSerializer,
     PublicArticleDetailSerializer,
     PublicArticleListSerializer,
     PublicCategorySerializer,
+    PublicEventDetailSerializer,
+    PublicEventListSerializer,
+    PublicMediaContentSerializer,
+    PublicProgramSectionDetailSerializer,
+    PublicProgramSectionListSerializer,
 )
-from apps.content.models import Article, Category
+from apps.content.models import Article, Category, Event, MediaContent, ProgramItem, ProgramSection
 from apps.core.mixins import AuditMixin
 from apps.core.models import AuditLog
 
@@ -117,6 +130,30 @@ class PublicStatsView(APIView):
             "total_categories": Category.objects.filter(is_active=True).count(),
         }
         return Response(stats)
+
+
+# ===========================================================================
+# Public — Media
+# ===========================================================================
+
+class PublicMediaContentListView(ListAPIView):
+    """Contenus médias publiés (vidéos, publications Facebook/YouTube)."""
+
+    permission_classes = [AllowAny]
+    serializer_class = PublicMediaContentSerializer
+    pagination_class = SmallPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["platform", "embed_type", "category"]
+    search_fields = ["title", "description"]
+    ordering_fields = ["published_at"]
+    ordering = ["-published_at"]
+
+    def get_queryset(self):
+        qs = MediaContent.objects.filter(is_active=True)
+        featured = self.request.query_params.get("featured")
+        if featured == "true":
+            qs = qs.filter(is_featured=True)
+        return qs
 
 
 # ===========================================================================
@@ -340,3 +377,434 @@ class AdminCategoryDetailView(APIView):
 
         category.delete()
         return Response({"detail": "Catégorie supprimée."}, status=status.HTTP_200_OK)
+
+
+# ===========================================================================
+# Admin — Media
+# ===========================================================================
+
+class AdminMediaContentListCreateView(APIView):
+    """Admin : lister et créer des contenus médias."""
+
+    permission_classes = [IsAuthenticated, CanManageMedia]
+
+    def get(self, request):
+        qs = MediaContent.objects.all().order_by("-published_at")
+        platform = request.query_params.get("platform")
+        if platform:
+            qs = qs.filter(platform=platform)
+        serializer = AdminMediaContentSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AdminMediaContentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        media = serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.CREATE,
+            entity_type="MediaContent",
+            entity_id=media.pk,
+            request=request,
+        )
+
+        return Response(
+            AdminMediaContentSerializer(media).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminMediaContentDetailView(APIView):
+    """Admin : modifier ou supprimer un contenu média."""
+
+    permission_classes = [IsAuthenticated, CanManageMedia]
+
+    def _get_media(self, pk):
+        try:
+            return MediaContent.objects.get(pk=pk)
+        except MediaContent.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        media = self._get_media(pk)
+        if not media:
+            return Response({"detail": "Média introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AdminMediaContentSerializer(media).data)
+
+    def patch(self, request, pk):
+        media = self._get_media(pk)
+        if not media:
+            return Response({"detail": "Média introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminMediaContentSerializer(media, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.UPDATE,
+            entity_type="MediaContent",
+            entity_id=media.pk,
+            request=request,
+        )
+
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        media = self._get_media(pk)
+        if not media:
+            return Response({"detail": "Média introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.DELETE,
+            entity_type="MediaContent",
+            entity_id=media.pk,
+            request=request,
+        )
+
+        media.delete()
+        return Response({"detail": "Média supprimé."}, status=status.HTTP_200_OK)
+
+
+# ===========================================================================
+# Public — Programme
+# ===========================================================================
+
+class PublicProgramSectionListView(ListAPIView):
+    """Sections actives du programme avec le nombre de mesures."""
+
+    permission_classes = [AllowAny]
+    serializer_class = PublicProgramSectionListSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return (
+            ProgramSection.objects
+            .filter(is_active=True)
+            .annotate(item_count=Count("items", filter=Q(items__is_active=True)))
+            .order_by("order", "title")
+        )
+
+
+class PublicProgramSectionDetailView(RetrieveAPIView):
+    """Détail d'une section avec ses mesures actives."""
+
+    permission_classes = [AllowAny]
+    serializer_class = PublicProgramSectionDetailSerializer
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return ProgramSection.objects.filter(is_active=True)
+
+
+# ===========================================================================
+# Public — Événements / Agenda
+# ===========================================================================
+
+class PublicEventListView(ListAPIView):
+    """Événements publiés, filtrables par type et statut."""
+
+    permission_classes = [AllowAny]
+    serializer_class = PublicEventListSerializer
+    pagination_class = SmallPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ["event_type", "status", "city"]
+    search_fields = ["title", "short_description", "location"]
+    ordering_fields = ["start_date"]
+    ordering = ["-start_date"]
+
+    def get_queryset(self):
+        qs = Event.objects.filter(is_active=True, published_at__isnull=False)
+
+        featured = self.request.query_params.get("featured")
+        if featured == "true":
+            qs = qs.filter(is_featured=True)
+
+        upcoming = self.request.query_params.get("upcoming")
+        if upcoming == "true":
+            qs = qs.filter(start_date__gte=timezone.now()).order_by("start_date")
+
+        return qs
+
+
+class PublicEventDetailView(RetrieveAPIView):
+    """Détail d'un événement publié par son slug."""
+
+    permission_classes = [AllowAny]
+    serializer_class = PublicEventDetailSerializer
+    lookup_field = "slug"
+
+    def get_queryset(self):
+        return Event.objects.filter(is_active=True, published_at__isnull=False)
+
+
+# ===========================================================================
+# Admin — Programme
+# ===========================================================================
+
+class AdminProgramSectionListCreateView(APIView):
+    """Admin : lister et créer des sections du programme."""
+
+    permission_classes = [IsAuthenticated, CanManageProgram]
+
+    def get(self, request):
+        qs = (
+            ProgramSection.objects.all()
+            .annotate(item_count=Count("items"))
+            .order_by("order", "title")
+        )
+        serializer = AdminProgramSectionSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AdminProgramSectionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        section = serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.CREATE,
+            entity_type="ProgramSection",
+            entity_id=section.pk,
+            request=request,
+        )
+
+        return Response(
+            AdminProgramSectionSerializer(section).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminProgramSectionDetailView(APIView):
+    """Admin : détail, modification et suppression d'une section."""
+
+    permission_classes = [IsAuthenticated, CanManageProgram]
+
+    def _get_section(self, pk):
+        try:
+            return ProgramSection.objects.annotate(item_count=Count("items")).get(pk=pk)
+        except ProgramSection.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        section = self._get_section(pk)
+        if not section:
+            return Response({"detail": "Section introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AdminProgramSectionSerializer(section).data)
+
+    def patch(self, request, pk):
+        section = self._get_section(pk)
+        if not section:
+            return Response({"detail": "Section introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminProgramSectionSerializer(section, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.UPDATE,
+            entity_type="ProgramSection",
+            entity_id=section.pk,
+            request=request,
+        )
+
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        section = self._get_section(pk)
+        if not section:
+            return Response({"detail": "Section introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.DELETE,
+            entity_type="ProgramSection",
+            entity_id=section.pk,
+            request=request,
+        )
+
+        section.delete()
+        return Response({"detail": "Section supprimée."}, status=status.HTTP_200_OK)
+
+
+class AdminProgramItemListCreateView(APIView):
+    """Admin : lister et créer des mesures dans une section."""
+
+    permission_classes = [IsAuthenticated, CanManageProgram]
+
+    def get(self, request):
+        qs = ProgramItem.objects.all().select_related("section").order_by("section__order", "order")
+        section_id = request.query_params.get("section")
+        if section_id:
+            qs = qs.filter(section_id=section_id)
+        serializer = AdminProgramItemSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AdminProgramItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        item = serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.CREATE,
+            entity_type="ProgramItem",
+            entity_id=item.pk,
+            request=request,
+        )
+
+        return Response(
+            AdminProgramItemSerializer(item).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminProgramItemDetailView(APIView):
+    """Admin : modifier ou supprimer une mesure du programme."""
+
+    permission_classes = [IsAuthenticated, CanManageProgram]
+
+    def _get_item(self, pk):
+        try:
+            return ProgramItem.objects.select_related("section").get(pk=pk)
+        except ProgramItem.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        item = self._get_item(pk)
+        if not item:
+            return Response({"detail": "Mesure introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AdminProgramItemSerializer(item).data)
+
+    def patch(self, request, pk):
+        item = self._get_item(pk)
+        if not item:
+            return Response({"detail": "Mesure introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminProgramItemSerializer(item, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.UPDATE,
+            entity_type="ProgramItem",
+            entity_id=item.pk,
+            request=request,
+        )
+
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        item = self._get_item(pk)
+        if not item:
+            return Response({"detail": "Mesure introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.DELETE,
+            entity_type="ProgramItem",
+            entity_id=item.pk,
+            request=request,
+        )
+
+        item.delete()
+        return Response({"detail": "Mesure supprimée."}, status=status.HTTP_200_OK)
+
+
+# ===========================================================================
+# Admin — Événements / Agenda
+# ===========================================================================
+
+class AdminEventListCreateView(APIView):
+    """Admin : lister et créer des événements."""
+
+    permission_classes = [IsAuthenticated, CanManageEvents]
+
+    def get(self, request):
+        qs = Event.objects.all().order_by("-start_date")
+
+        event_status = request.query_params.get("status")
+        if event_status:
+            qs = qs.filter(status=event_status)
+
+        event_type = request.query_params.get("event_type")
+        if event_type:
+            qs = qs.filter(event_type=event_type)
+
+        serializer = AdminEventListSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AdminEventDetailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        event = serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.CREATE,
+            entity_type="Event",
+            entity_id=event.pk,
+            request=request,
+        )
+
+        return Response(
+            AdminEventDetailSerializer(event).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminEventDetailView(APIView):
+    """Admin : détail, modification et suppression d'un événement."""
+
+    permission_classes = [IsAuthenticated, CanManageEvents]
+
+    def _get_event(self, pk):
+        try:
+            return Event.objects.get(pk=pk)
+        except Event.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        event = self._get_event(pk)
+        if not event:
+            return Response({"detail": "Événement introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AdminEventDetailSerializer(event).data)
+
+    def patch(self, request, pk):
+        event = self._get_event(pk)
+        if not event:
+            return Response({"detail": "Événement introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminEventDetailSerializer(event, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.UPDATE,
+            entity_type="Event",
+            entity_id=event.pk,
+            request=request,
+        )
+
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        event = self._get_event(pk)
+        if not event:
+            return Response({"detail": "Événement introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.DELETE,
+            entity_type="Event",
+            entity_id=event.pk,
+            request=request,
+        )
+
+        event.delete()
+        return Response({"detail": "Événement supprimé."}, status=status.HTTP_200_OK)

@@ -1,0 +1,81 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Nouveau message de contact{% endblock %}
+{% block preheader %}{{ name }} vous a envoyé un message : {{ subject }}{% endblock %}
+{% block header_tag %}Contact{% endblock %}
+
+{% block content %}
+<div style="font-family: 'Inter', sans-serif;">
+
+  <h1 style="font-size: 22px; font-weight: 700; color: #111111; margin: 0 0 8px;">
+    Nouveau message de contact
+  </h1>
+  <p style="font-size: 14px; color: #666666; margin: 0 0 32px; line-height: 1.5;">
+    Un visiteur a envoyé un message via le formulaire de contact du site.
+  </p>
+
+  <!-- Infos expéditeur -->
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9f9f9; border-radius: 8px; margin-bottom: 24px;">
+    <tr>
+      <td style="padding: 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="padding-bottom: 12px;">
+              <div style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Nom</div>
+              <div style="font-size: 15px; font-weight: 600; color: #111111;">{{ name }}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-bottom: 12px;">
+              <div style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Email</div>
+              <div style="font-size: 15px; color: #111111;">
+                <a href="mailto:{{ email }}" style="color: #00A651; text-decoration: none;">{{ email }}</a>
+              </div>
+            </td>
+          </tr>
+          {% if phone %}
+          <tr>
+            <td style="padding-bottom: 12px;">
+              <div style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Téléphone</div>
+              <div style="font-size: 15px; color: #111111;">{{ phone }}</div>
+            </td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td>
+              <div style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">Sujet</div>
+              <div style="font-size: 15px; font-weight: 600; color: #111111;">{{ subject }}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Message -->
+  <div style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Message</div>
+  <div style="background-color: #ffffff; border: 1px solid #e5e5e5; border-left: 3px solid #00A651; border-radius: 6px; padding: 20px; margin-bottom: 32px;">
+    <p style="font-size: 14px; color: #333333; line-height: 1.7; margin: 0; white-space: pre-wrap;">{{ message }}</p>
+  </div>
+
+  <!-- CTA -->
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center">
+        <a href="mailto:{{ email }}?subject=Re: {{ subject }}" style="display: inline-block; background-color: #00A651; color: #ffffff; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 6px; letter-spacing: 0.3px;">
+          Répondre à {{ name }}
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <p style="font-size: 12px; color: #999999; text-align: center; margin-top: 24px; line-height: 1.5;">
+    Ce message a été envoyé le {{ date }} depuis le formulaire de contact du site FPP.
+  </p>
+
+</div>
+{% endblock %}
+
+{% block footer_note %}
+Cet email est une notification automatique du site FPP.<br>
+{% endblock %}

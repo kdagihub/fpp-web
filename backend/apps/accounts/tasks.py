@@ -1,13 +1,34 @@
 import logging
+from datetime import datetime
 
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
+from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_encode
 
 logger = logging.getLogger(__name__)
+
+
+def _send_html_email(subject, template_name, context, recipient_list, reply_to=None):
+    """Render an HTML email from a template and send with plain-text fallback."""
+    context.setdefault("year", datetime.now().year)
+
+    html_content = render_to_string(template_name, context)
+    text_content = strip_tags(html_content)
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=recipient_list,
+        reply_to=reply_to or [],
+    )
+    msg.attach_alternative(html_content, "text/html")
+    msg.send(fail_silently=False)
 
 
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
@@ -30,21 +51,14 @@ def send_email_verification(self, user_id):
     verify_link = f"{frontend_url}/verify-email?uid={uid}&token={token}"
 
     try:
-        send_mail(
+        _send_html_email(
             subject="FPP — Vérifiez votre adresse email",
-            message=(
-                f"Bonjour {user.first_name},\n\n"
-                f"Bienvenue au Front Patriotique Panafricain !\n\n"
-                f"Pour activer votre compte, veuillez vérifier votre email "
-                f"en cliquant sur le lien suivant :\n"
-                f"{verify_link}\n\n"
-                f"Ce lien expire dans 24 heures.\n\n"
-                f"Si vous n'avez pas créé ce compte, ignorez cet email.\n\n"
-                f"— L'équipe FPP"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            template_name="emails/verify_email.html",
+            context={
+                "first_name": user.first_name,
+                "verify_link": verify_link,
+            },
             recipient_list=[user.email],
-            fail_silently=False,
         )
         logger.info("Email de vérification envoyé à %s", user.email)
     except Exception as exc:
@@ -64,22 +78,17 @@ def send_password_reset_email(self, user_id, uid, token):
         return
 
     frontend_url = getattr(settings, "FRONTEND_URL", "https://fpp-ci.online")
-    reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+    reset_link = f"{frontend_url}/password-reset/confirm?uid={uid}&token={token}"
 
     try:
-        send_mail(
+        _send_html_email(
             subject="FPP — Réinitialisation de votre mot de passe",
-            message=(
-                f"Bonjour {user.first_name},\n\n"
-                f"Cliquez sur ce lien pour réinitialiser votre mot de passe :\n"
-                f"{reset_link}\n\n"
-                f"Ce lien expire dans 24 heures.\n\n"
-                f"Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.\n\n"
-                f"— L'équipe FPP"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            template_name="emails/password_reset.html",
+            context={
+                "first_name": user.first_name,
+                "reset_link": reset_link,
+            },
             recipient_list=[user.email],
-            fail_silently=False,
         )
         logger.info("Email de reset envoyé à %s", user.email)
     except Exception as exc:
@@ -97,25 +106,55 @@ def send_welcome_email(self, user_id):
     except User.DoesNotExist:
         return
 
+    frontend_url = getattr(settings, "FRONTEND_URL", "https://fpp-ci.online")
+    dashboard_link = f"{frontend_url}/mon-espace"
+
     try:
-        send_mail(
+        _send_html_email(
             subject="FPP — Bienvenue au Front Patriotique Panafricain !",
-            message=(
-                f"Bonjour {user.first_name},\n\n"
-                f"Votre email a été vérifié avec succès.\n"
-                f"Votre compte sympathisant FPP est désormais actif.\n\n"
-                f"Vous pouvez dès maintenant accéder aux actualités publiques "
-                f"et aux newsletters depuis votre tableau de bord.\n\n"
-                f"Pour devenir membre à part entière, soumettez une demande "
-                f"d'adhésion depuis votre profil.\n\n"
-                f"— L'équipe FPP"
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            template_name="emails/welcome.html",
+            context={
+                "first_name": user.first_name,
+                "dashboard_link": dashboard_link,
+            },
             recipient_list=[user.email],
-            fail_silently=False,
         )
     except Exception as exc:
         logger.error("Échec envoi email bienvenue à %s: %s", user.email, exc)
+        raise self.retry(exc=exc)
+
+
+@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+def notify_contact_message(self, contact_id):
+    """Envoie un email de notification au parti quand un visiteur soumet le formulaire de contact."""
+    from apps.contact.models import ContactMessage
+
+    try:
+        msg = ContactMessage.objects.get(pk=contact_id)
+    except ContactMessage.DoesNotExist:
+        logger.warning("notify_contact_message: message %s introuvable", contact_id)
+        return
+
+    party_email = getattr(settings, "CONTACT_DEST_EMAIL", settings.DEFAULT_FROM_EMAIL)
+
+    try:
+        _send_html_email(
+            subject=f"FPP — Nouveau message de contact : {msg.subject}",
+            template_name="emails/contact_notification.html",
+            context={
+                "name": msg.name,
+                "email": msg.email,
+                "phone": msg.phone or "",
+                "subject": msg.subject,
+                "message": msg.message,
+                "date": msg.created_at.strftime("%d/%m/%Y à %H:%M"),
+            },
+            recipient_list=[party_email],
+            reply_to=[msg.email],
+        )
+        logger.info("Email de notification contact envoyé pour message %s", contact_id)
+    except Exception as exc:
+        logger.error("Échec envoi notification contact %s: %s", contact_id, exc)
         raise self.retry(exc=exc)
 
 
@@ -139,22 +178,22 @@ def notify_admins_new_registration(user_id):
     profile = getattr(user, "member_profile", None)
     doc_info = ""
     if profile:
-        doc_info = f"Pièce d'identité : {profile.get_id_document_type_display()} — {profile.id_document_number}\n"
+        doc_info = f"{profile.get_id_document_type_display()} — {profile.id_document_number}"
+
+    frontend_url = getattr(settings, "FRONTEND_URL", "https://fpp-ci.online")
 
     try:
-        send_mail(
+        _send_html_email(
             subject=f"FPP — Nouvelle demande d'adhésion : {user.full_name}",
-            message=(
-                f"Nouvelle demande d'adhésion reçue :\n\n"
-                f"Nom : {user.full_name}\n"
-                f"Email : {user.email}\n"
-                f"{doc_info}"
-                f"Date : {user.created_at.strftime('%d/%m/%Y %H:%M')}\n\n"
-                f"Connectez-vous au backoffice pour examiner cette demande."
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            template_name="emails/admin_new_registration.html",
+            context={
+                "full_name": user.full_name,
+                "email": user.email,
+                "doc_info": doc_info,
+                "registration_date": user.created_at.strftime("%d/%m/%Y %H:%M"),
+                "admin_link": f"{frontend_url}/admin/members",
+            },
             recipient_list=admin_emails,
-            fail_silently=True,
         )
     except Exception:
         pass

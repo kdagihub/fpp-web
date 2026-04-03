@@ -1,0 +1,75 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Nouvelle adhésion — FPP{% endblock %}
+{% block preheader %}Nouvelle demande d'adhésion de {{ full_name }}.{% endblock %}
+{% block header_tag %}Administration{% endblock %}
+
+{% block content %}
+<!-- Alert badge -->
+<div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">Notification</div>
+<div style="font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 700; color: #111111; line-height: 1.3; margin-bottom: 24px;">
+  Nouvelle demande d'adh&eacute;sion
+</div>
+
+<!-- Message -->
+<div style="font-family: 'Inter', sans-serif; font-size: 15px; color: #444444; line-height: 1.7; margin-bottom: 32px;">
+  Un nouveau membre souhaite rejoindre le <strong style="color: #111111;">Front Patriotique Panafricain</strong>.
+</div>
+
+<!-- Member info card -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 32px;">
+  <tr>
+    <td style="padding: 24px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 12px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Nom complet</span><br>
+            <span style="font-family: 'Inter', sans-serif; font-size: 15px; color: #111111; font-weight: 600;">{{ full_name }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 12px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Email</span><br>
+            <span style="font-family: 'Inter', sans-serif; font-size: 15px; color: #111111;">{{ email }}</span>
+          </td>
+        </tr>
+        {% if doc_info %}
+        <tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 12px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Pi&egrave;ce d'identit&eacute;</span><br>
+            <span style="font-family: 'Inter', sans-serif; font-size: 15px; color: #111111;">{{ doc_info }}</span>
+          </td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td style="padding: 8px 0;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 12px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Date d'inscription</span><br>
+            <span style="font-family: 'Inter', sans-serif; font-size: 15px; color: #111111;">{{ registration_date }}</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- CTA Button -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td align="center" style="padding: 8px 0 16px;">
+      <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="background-color: #111111; border-radius: 8px;">
+            <a href="{{ admin_link }}" target="_blank" style="display: inline-block; padding: 16px 48px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; letter-spacing: 0.5px;">
+              Examiner la demande
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+{% endblock %}
+
+{% block footer_note %}
+  Notification automatique du syst&egrave;me FPP.<br>
+{% endblock %}

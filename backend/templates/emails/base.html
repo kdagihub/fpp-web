@@ -1,0 +1,109 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>{% block title %}FPP{% endblock %}</title>
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; }
+    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    table { border-collapse: collapse !important; }
+    body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f5f5;
+      color: #1a1a1a;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f5f5;">
+
+  <!-- Preheader (hidden text for email preview) -->
+  <div style="display: none; font-size: 1px; color: #f5f5f5; line-height: 1px; max-height: 0; max-width: 0; opacity: 0; overflow: hidden;">
+    {% block preheader %}Front Patriotique Panafricain{% endblock %}
+  </div>
+
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f5f5f5;">
+    <tr>
+      <td align="center" style="padding: 24px 16px;">
+
+        <!-- Main Container -->
+        <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; width: 100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #111111; padding: 32px 40px; border-radius: 12px 12px 0 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <!-- Logo text -->
+                    <table role="presentation" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="border-left: 4px solid #00A651; padding-left: 16px;">
+                          <div style="font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 3px; line-height: 1;">FPP</div>
+                          <div style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 500; color: #00A651; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; line-height: 1;">Front Patriotique Panafricain</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" valign="middle">
+                    <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">{% block header_tag %}{% endblock %}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Green accent line -->
+          <tr>
+            <td style="background-color: #00A651; height: 3px; font-size: 0; line-height: 0;">&nbsp;</td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background-color: #ffffff; padding: 48px 40px;">
+              {% block content %}{% endblock %}
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #111111; padding: 32px 40px; border-radius: 0 0 12px 12px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center">
+                    <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #888888; line-height: 1.6;">
+                      <strong style="color: #ffffff;">FPP</strong> &mdash; Front Patriotique Panafricain<br>
+                      <span style="color: #00A651;">&#9679;</span> Abidjan, C&ocirc;te d'Ivoire
+                    </div>
+                    <div style="margin-top: 16px; font-family: 'Inter', sans-serif; font-size: 10px; color: #666666; line-height: 1.5;">
+                      {% block footer_note %}{% endblock %}
+                      &copy; {{ year }} FPP. Tous droits r&eacute;serv&eacute;s.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

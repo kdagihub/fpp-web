@@ -66,11 +66,14 @@ export const useAuthStore = defineStore('auth', () => {
     router.push({ path: '/login', query: { expired: '1' } })
   }
 
-  async function changePassword(oldPassword: string, newPassword: string) {
-    return api.post('/auth/password/change/', {
+  async function changePassword(oldPassword: string, newPassword: string, newPasswordConfirm: string) {
+    const res = await api.post('/auth/password/change/', {
       old_password: oldPassword,
       new_password: newPassword,
+      new_password_confirm: newPasswordConfirm,
     })
+    user.value = null
+    return res
   }
 
   return {

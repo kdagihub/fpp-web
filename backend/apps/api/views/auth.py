@@ -231,7 +231,7 @@ class PasswordResetView(APIView):
             )
 
         return Response(
-            {"detail": "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé."}
+            {"detail": "Si un compte est associé à cet email, un lien de réinitialisation a été envoyé."}
         )
 
 

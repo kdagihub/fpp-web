@@ -18,12 +18,12 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default="api.fpp-ci.online").split(",")  # noqa: F405
+ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default=["api.fpp-ci.online", "fpp-backend"])  # noqa: F405
 
-CORS_ALLOWED_ORIGINS = [
-    "https://fpp-ci.online",
-    "https://www.fpp-ci.online",
-]
+CORS_ALLOWED_ORIGINS = env(  # noqa: F405
+    "CORS_ALLOWED_ORIGINS",
+    default=["https://fpp-ci.online", "https://www.fpp-ci.online"],
+)
 
 CSRF_TRUSTED_ORIGINS = [
     "https://fpp-ci.online",

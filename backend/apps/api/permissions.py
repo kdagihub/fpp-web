@@ -119,3 +119,18 @@ class CanManagePermissions(BasePermission):
 class CanViewAuditLog(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_superuser or request.user.has_perm("core.can_view_audit_log")
+
+
+class CanManageMedia(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_superuser or request.user.has_perm("content.can_manage_media")
+
+
+class CanManageProgram(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_superuser or request.user.has_perm("content.can_manage_program")
+
+
+class CanManageEvents(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_superuser or request.user.has_perm("content.can_manage_events")

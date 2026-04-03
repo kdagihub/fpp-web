@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
 import { useAuthStore } from '@/stores/auth'
-import { Menu, X, ArrowRight } from 'lucide-vue-next'
+import { Menu, X, ArrowRight, LogIn } from 'lucide-vue-next'
 import logoFpp from '@/assets/img/fpplogsf.png'
 
 const settingsStore = useSettingsStore()
@@ -14,7 +14,10 @@ const mobileMenuOpen = ref(false)
 const navLinks = [
   { to: '/', label: 'Accueil', name: 'home' },
   { to: '/a-propos', label: 'Le Parti', name: 'about' },
+  { to: '/programme', label: 'Programme', name: 'programme' },
   { to: '/actualites', label: 'Actualités', name: 'news' },
+  { to: '/agenda', label: 'Agenda', name: 'agenda' },
+  { to: '/fpp-tv', label: 'FPP-TV', name: 'fpp-tv' },
   { to: '/contact', label: 'Contact', name: 'contact' },
 ]
 
@@ -35,11 +38,11 @@ onMounted(() => {
   <div class="min-h-screen flex flex-col bg-[var(--color-background)]">
     <!-- ────── NAVBAR ────── -->
     <nav class="sticky top-0 z-50 bg-white border-b border-[var(--color-border)]">
-      <div class="mx-auto max-w-[var(--container-xl)] h-16 px-6 flex items-center justify-between">
+      <div class="mx-auto max-w-[var(--container-xl)] h-16 px-6 flex items-center">
         <!-- Logo + brand -->
         <RouterLink
           to="/"
-          class="flex items-center gap-2.5 no-underline group"
+          class="flex items-center gap-2.5 no-underline group shrink-0"
           @click="closeMobileMenu"
         >
           <img
@@ -57,13 +60,13 @@ onMounted(() => {
           </div>
         </RouterLink>
 
-        <!-- Desktop nav links — uppercase, bold, Sora font, NO green text -->
-        <div class="hidden lg:flex items-center gap-1">
+        <!-- Desktop nav links (left, after logo) -->
+        <div class="hidden lg:flex items-center ml-8 xl:ml-10">
           <RouterLink
             v-for="link in navLinks"
             :key="link.name"
             :to="link.to"
-            class="relative px-4 py-2 font-heading text-[13px] font-bold uppercase tracking-[0.06em] no-underline transition-colors"
+            class="relative px-3 xl:px-4 py-2 font-heading text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] no-underline transition-colors whitespace-nowrap"
             :class="[
               isActive(link.name)
                 ? 'text-[var(--color-primary)]'
@@ -72,35 +75,44 @@ onMounted(() => {
             @click="closeMobileMenu"
           >
             {{ link.label }}
-            <!-- Active indicator: green underline bar -->
             <span
               v-if="isActive(link.name)"
-              class="absolute bottom-0 left-4 right-4 h-[2.5px] bg-[var(--color-accent)] rounded-full"
+              class="absolute bottom-0 left-3 right-3 h-[2.5px] bg-[var(--color-accent)] rounded-full"
             />
           </RouterLink>
         </div>
 
-        <!-- Desktop CTA -->
-        <div class="hidden lg:flex items-center gap-3">
-          <RouterLink
-            v-if="authStore.isAuthenticated && authStore.isAdmin"
-            to="/admin/dashboard"
-            class="px-4 py-2 font-heading text-[13px] font-bold uppercase tracking-[0.04em] text-[var(--color-primary)] no-underline border-2 border-[var(--color-primary)] rounded-sm transition-all hover:bg-[var(--color-primary)] hover:text-white cursor-pointer"
-          >
-            Administration
-          </RouterLink>
-          <RouterLink
-            to="/adherer"
-            class="group inline-flex items-center gap-2 px-5 py-2.5 font-heading text-[13px] font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer"
-          >
-            Adhérer
-            <ArrowRight :size="16" class="transition-transform group-hover:translate-x-0.5" />
-          </RouterLink>
+        <!-- Desktop CTA (pushed far right) -->
+        <div class="hidden lg:flex items-center gap-2.5 ml-auto shrink-0">
+          <template v-if="authStore.isAuthenticated && authStore.isAdmin">
+            <RouterLink
+              to="/admin/dashboard"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 font-heading text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--color-primary)] no-underline border-2 border-[var(--color-primary)] rounded-sm transition-all hover:bg-[var(--color-primary)] hover:text-white cursor-pointer whitespace-nowrap"
+            >
+              Administration
+            </RouterLink>
+          </template>
+          <template v-else>
+            <RouterLink
+              to="/login"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 font-heading text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--color-muted)] no-underline border border-[var(--color-border)] rounded-sm transition-all hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] cursor-pointer whitespace-nowrap"
+            >
+              <LogIn :size="14" />
+              Connexion
+            </RouterLink>
+            <RouterLink
+              to="/adherer"
+              class="group inline-flex items-center gap-1.5 px-5 py-2.5 font-heading text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer whitespace-nowrap"
+            >
+              Adhérer
+              <ArrowRight :size="15" class="transition-transform group-hover:translate-x-0.5" />
+            </RouterLink>
+          </template>
         </div>
 
         <!-- Mobile hamburger -->
         <button
-          class="lg:hidden p-2 cursor-pointer text-[var(--color-primary)]"
+          class="lg:hidden ml-auto p-2 cursor-pointer text-[var(--color-primary)]"
           @click="mobileMenuOpen = !mobileMenuOpen"
           :aria-label="mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'"
         >
@@ -142,14 +154,35 @@ onMounted(() => {
               />
             </span>
           </RouterLink>
-          <RouterLink
-            to="/adherer"
-            class="mt-4 flex items-center justify-center gap-2 w-full px-5 py-3 font-heading text-[13px] font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm cursor-pointer"
-            @click="closeMobileMenu"
-          >
-            Adhérer
-            <ArrowRight :size="16" />
-          </RouterLink>
+          <div class="mt-4 flex flex-col gap-2.5">
+            <template v-if="authStore.isAuthenticated && authStore.isAdmin">
+              <RouterLink
+                to="/admin/dashboard"
+                class="flex items-center justify-center gap-2 w-full px-5 py-3 font-heading text-[13px] font-bold uppercase tracking-[0.04em] text-[var(--color-primary)] no-underline border-2 border-[var(--color-primary)] rounded-sm cursor-pointer"
+                @click="closeMobileMenu"
+              >
+                Administration
+              </RouterLink>
+            </template>
+            <template v-else>
+              <RouterLink
+                to="/login"
+                class="flex items-center justify-center gap-2 w-full px-5 py-3 font-heading text-[13px] font-bold uppercase tracking-[0.04em] text-[var(--color-primary)] no-underline border-2 border-[var(--color-border)] rounded-sm cursor-pointer"
+                @click="closeMobileMenu"
+              >
+                <LogIn :size="15" />
+                Connexion
+              </RouterLink>
+              <RouterLink
+                to="/adherer"
+                class="flex items-center justify-center gap-2 w-full px-5 py-3 font-heading text-[13px] font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm cursor-pointer"
+                @click="closeMobileMenu"
+              >
+                Adhérer
+                <ArrowRight :size="16" />
+              </RouterLink>
+            </template>
+          </div>
         </div>
       </Transition>
     </nav>
@@ -216,11 +249,11 @@ onMounted(() => {
               Contact
             </h4>
             <ul class="space-y-3 text-sm text-white/70">
-              <li v-if="settingsStore.settings?.email" class="font-medium">
-                {{ settingsStore.settings.email }}
+              <li v-if="settingsStore.settings?.contact_email" class="font-medium">
+                {{ settingsStore.settings.contact_email }}
               </li>
-              <li v-if="settingsStore.settings?.phone" class="font-medium">
-                {{ settingsStore.settings.phone }}
+              <li v-if="settingsStore.settings?.whatsapp_number" class="font-medium">
+                {{ settingsStore.settings.whatsapp_number }}
               </li>
               <li v-if="settingsStore.settings?.address" class="leading-relaxed">
                 {{ settingsStore.settings.address }}
@@ -234,9 +267,9 @@ onMounted(() => {
               Réseaux
             </h4>
             <ul class="space-y-3">
-              <li v-if="settingsStore.settings?.facebook">
+              <li v-if="settingsStore.settings?.facebook_url">
                 <a
-                  :href="settingsStore.settings.facebook"
+                  :href="settingsStore.settings.facebook_url"
                   target="_blank"
                   rel="noopener"
                   class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
@@ -244,9 +277,9 @@ onMounted(() => {
                   Facebook
                 </a>
               </li>
-              <li v-if="settingsStore.settings?.twitter">
+              <li v-if="settingsStore.settings?.twitter_url">
                 <a
-                  :href="settingsStore.settings.twitter"
+                  :href="settingsStore.settings.twitter_url"
                   target="_blank"
                   rel="noopener"
                   class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
@@ -254,9 +287,9 @@ onMounted(() => {
                   X / Twitter
                 </a>
               </li>
-              <li v-if="settingsStore.settings?.instagram">
+              <li v-if="settingsStore.settings?.instagram_url">
                 <a
-                  :href="settingsStore.settings.instagram"
+                  :href="settingsStore.settings.instagram_url"
                   target="_blank"
                   rel="noopener"
                   class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
@@ -264,9 +297,9 @@ onMounted(() => {
                   Instagram
                 </a>
               </li>
-              <li v-if="settingsStore.settings?.youtube">
+              <li v-if="settingsStore.settings?.youtube_url">
                 <a
-                  :href="settingsStore.settings.youtube"
+                  :href="settingsStore.settings.youtube_url"
                   target="_blank"
                   rel="noopener"
                   class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
@@ -274,16 +307,7 @@ onMounted(() => {
                   YouTube
                 </a>
               </li>
-              <li v-if="settingsStore.settings?.tiktok">
-                <a
-                  :href="settingsStore.settings.tiktok"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  TikTok
-                </a>
-              </li>
+            
             </ul>
           </div>
         </div>
@@ -293,6 +317,14 @@ onMounted(() => {
           <p class="text-xs text-white/30 font-medium">
             &copy; {{ new Date().getFullYear() }} Front Patriotique Panafricain. Tous droits réservés.
           </p>
+          <a
+            href="https://kdagihub.github.io/coder-showcase-studio/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-xs text-white/30 font-medium hover:text-green-400 transition-colors"
+          >
+            Développé par KDA - DEV
+          </a>
         </div>
       </div>
     </footer>

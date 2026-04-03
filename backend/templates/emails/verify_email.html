@@ -1,0 +1,62 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Vérifiez votre adresse email — FPP{% endblock %}
+{% block preheader %}Bienvenue {{ first_name }} ! Activez votre compte FPP en un clic.{% endblock %}
+{% block header_tag %}Vérification{% endblock %}
+
+{% block content %}
+<!-- Greeting -->
+<div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 8px;">Bienvenue</div>
+<div style="font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 700; color: #111111; line-height: 1.3; margin-bottom: 24px;">
+  Bonjour {{ first_name }},
+</div>
+
+<!-- Message -->
+<div style="font-family: 'Inter', sans-serif; font-size: 15px; color: #444444; line-height: 1.7; margin-bottom: 32px;">
+  Merci d'avoir rejoint le <strong style="color: #111111;">Front Patriotique Panafricain</strong>.<br>
+  Pour activer votre compte et acc&eacute;der &agrave; votre espace membre, veuillez confirmer votre adresse email.
+</div>
+
+<!-- CTA Button -->
+<table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td align="center" style="padding: 8px 0 40px;">
+      <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="background-color: #00A651; border-radius: 8px;">
+            <a href="{{ verify_link }}" target="_blank" style="display: inline-block; padding: 16px 48px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; letter-spacing: 0.5px;">
+              Activer mon compte
+            </a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- Security note -->
+<div style="background-color: #f8f9fa; border-left: 3px solid #e0e0e0; padding: 16px 20px; border-radius: 0 6px 6px 0; margin-bottom: 24px;">
+  <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #666666; line-height: 1.6;">
+    <strong style="color: #444444;">&#128274; S&eacute;curit&eacute;</strong><br>
+    Ce lien expire dans <strong>24 heures</strong>. Si vous n'avez pas cr&eacute;&eacute; de compte sur FPP, ignorez simplement cet email.
+  </div>
+</div>
+
+<!-- Fallback link -->
+<div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #999999; line-height: 1.6;">
+  Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur&nbsp;:<br>
+  <a href="{{ verify_link }}" style="color: #00A651; word-break: break-all; font-size: 11px;">{{ verify_link }}</a>
+</div>
+
+<!-- Spam warning -->
+<div style="background-color: #fffbeb; border-left: 3px solid #f59e0b; padding: 12px 16px; border-radius: 0 6px 6px 0; margin-top: 24px;">
+  <div style="font-family: 'Inter', sans-serif; font-size: 12px; color: #92400e; line-height: 1.6;">
+    <strong>&#128233; Vous ne trouvez pas cet email ?</strong><br>
+    V&eacute;rifiez votre dossier <strong>Spam</strong> ou <strong>Courrier ind&eacute;sirable</strong>. Ajoutez <em>info@fpp-ci.online</em> &agrave; vos contacts pour ne rien manquer.
+  </div>
+</div>
+{% endblock %}
+
+{% block footer_note %}
+  Cet email a &eacute;t&eacute; envoy&eacute; suite &agrave; votre inscription sur fpp-ci.online.<br>
+{% endblock %}

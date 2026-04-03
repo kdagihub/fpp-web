@@ -25,9 +25,22 @@ from apps.api.views.content import (
     AdminArticleListView,
     AdminCategoryDetailView,
     AdminCategoryListCreateView,
+    AdminEventDetailView,
+    AdminEventListCreateView,
+    AdminMediaContentDetailView,
+    AdminMediaContentListCreateView,
+    AdminProgramItemDetailView,
+    AdminProgramItemListCreateView,
+    AdminProgramSectionDetailView,
+    AdminProgramSectionListCreateView,
     PublicArticleDetailView,
     PublicArticleListView,
     PublicCategoryListView,
+    PublicEventDetailView,
+    PublicEventListView,
+    PublicMediaContentListView,
+    PublicProgramSectionDetailView,
+    PublicProgramSectionListView,
     PublicStatsView,
 )
 from apps.api.views.dashboard import AdminDashboardView
@@ -43,6 +56,7 @@ from apps.api.views.membership import (
     ValidateMembershipView,
     VerifyMatriculeView,
 )
+from apps.api.views.share import ShareArticleView, ShareEventView, ShareProgrammeView
 from apps.api.views.site_settings import AdminSiteSettingsView, PublicSiteSettingsView
 
 app_name = "api"
@@ -80,6 +94,11 @@ public_urlpatterns = [
     path("articles/<slug:slug>/", PublicArticleDetailView.as_view(), name="public-article-detail"),
     path("categories/", PublicCategoryListView.as_view(), name="public-categories"),
     path("contact/", PublicContactView.as_view(), name="public-contact"),
+    path("media/", PublicMediaContentListView.as_view(), name="public-media"),
+    path("programme/", PublicProgramSectionListView.as_view(), name="public-programme"),
+    path("programme/<slug:slug>/", PublicProgramSectionDetailView.as_view(), name="public-programme-detail"),
+    path("events/", PublicEventListView.as_view(), name="public-events"),
+    path("events/<slug:slug>/", PublicEventDetailView.as_view(), name="public-event-detail"),
     path("stats/", PublicStatsView.as_view(), name="public-stats"),
 ]
 
@@ -110,6 +129,20 @@ admin_urlpatterns = [
     path("categories/", AdminCategoryListCreateView.as_view(), name="admin-categories"),
     path("categories/<uuid:pk>/", AdminCategoryDetailView.as_view(), name="admin-category-detail"),
 
+    # Médias
+    path("media/", AdminMediaContentListCreateView.as_view(), name="admin-media"),
+    path("media/<uuid:pk>/", AdminMediaContentDetailView.as_view(), name="admin-media-detail"),
+
+    # Programme
+    path("programme/sections/", AdminProgramSectionListCreateView.as_view(), name="admin-programme-sections"),
+    path("programme/sections/<uuid:pk>/", AdminProgramSectionDetailView.as_view(), name="admin-programme-section-detail"),
+    path("programme/items/", AdminProgramItemListCreateView.as_view(), name="admin-programme-items"),
+    path("programme/items/<uuid:pk>/", AdminProgramItemDetailView.as_view(), name="admin-programme-item-detail"),
+
+    # Événements / Agenda
+    path("events/", AdminEventListCreateView.as_view(), name="admin-events"),
+    path("events/<uuid:pk>/", AdminEventDetailView.as_view(), name="admin-event-detail"),
+
     # Contacts
     path("contacts/", AdminContactListView.as_view(), name="admin-contacts"),
     path("contacts/export/", AdminContactExportView.as_view(), name="admin-contacts-export"),
@@ -123,6 +156,15 @@ admin_urlpatterns = [
 ]
 
 # ---------------------------------------------------------------------------
+# Share (OG meta pour crawlers sociaux)
+# ---------------------------------------------------------------------------
+share_urlpatterns = [
+    path("article/<slug:slug>/", ShareArticleView.as_view(), name="share-article"),
+    path("event/<slug:slug>/", ShareEventView.as_view(), name="share-event"),
+    path("programme/<slug:slug>/", ShareProgrammeView.as_view(), name="share-programme"),
+]
+
+# ---------------------------------------------------------------------------
 # Root
 # ---------------------------------------------------------------------------
 urlpatterns = [
@@ -130,4 +172,5 @@ urlpatterns = [
     path("membership/", include((membership_urlpatterns, "membership"))),
     path("public/", include((public_urlpatterns, "public"))),
     path("admin/", include((admin_urlpatterns, "admin-api"))),
+    path("share/", include((share_urlpatterns, "share"))),
 ]

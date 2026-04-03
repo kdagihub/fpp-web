@@ -1,8 +1,11 @@
+import re
+from urllib.parse import parse_qs, urlparse
+
 from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from apps.content.models import Article, Category
+from apps.content.models import Article, Category, Event, MediaContent, ProgramItem, ProgramSection
 from apps.api.serializers.membership import validate_image_file
 
 
@@ -43,6 +46,19 @@ class PublicArticleDetailSerializer(serializers.ModelSerializer):
             "id", "title", "slug", "summary", "content", "cover_image",
             "author_name", "category_name", "category_slug",
             "is_featured", "published_at", "created_at",
+        ]
+
+
+# ---------------------------------------------------------------------------
+# Public — MediaContent
+# ---------------------------------------------------------------------------
+
+class PublicMediaContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MediaContent
+        fields = [
+            "id", "title", "description", "platform", "embed_type",
+            "source_url", "category", "is_featured", "published_at",
         ]
 
 
@@ -139,3 +155,234 @@ class AdminArticleCreateSerializer(serializers.ModelSerializer):
             validated_data["published_at"] = timezone.now()
 
         return super().update(instance, validated_data)
+
+
+# ---------------------------------------------------------------------------
+# Admin — MediaContent
+# ---------------------------------------------------------------------------
+
+def _resolve_facebook_share_url(url: str) -> str:
+    """Résout les URLs raccourcies Facebook /share/v/, /share/p/ et fb.watch vers l'URL réelle."""
+    import re
+    import requests
+    from urllib.parse import urlparse, urlunparse
+
+    lower = url.lower()
+    needs_resolve = (
+        "/share/v/" in lower
+        or "/share/r/" in lower
+        or "/share/p/" in lower
+        or "fb.watch" in lower
+    )
+    if not needs_resolve:
+        return url
+    try:
+        resp = requests.head(url, allow_redirects=True, timeout=10)
+        if resp.url and resp.url != url:
+            parsed = urlparse(resp.url)
+            clean_url = urlunparse(parsed._replace(query="", fragment=""))
+            if clean_url.endswith("/"):
+                return clean_url
+            return clean_url + "/"
+    except Exception:
+        pass
+    return url
+
+
+def _detect_platform(url: str):
+    """Détecte automatiquement la plateforme et le type d'embed depuis une URL brute ou embed."""
+    lower = url.lower()
+
+    if "facebook.com" in lower or "fb.watch" in lower:
+        platform = "facebook"
+        if "plugins/post.php" in lower:
+            embed_type = "post"
+        elif "/share/p/" in lower or "/posts/" in lower or "plugins/post" in lower:
+            embed_type = "post"
+        elif "/reel/" in lower or "/share/v/" in lower or "/share/r/" in lower or "/videos/" in lower:
+            embed_type = "video"
+        else:
+            embed_type = "video"
+        return platform, embed_type
+
+    if "youtube.com" in lower or "youtu.be" in lower:
+        return "youtube", "video"
+
+    return None, None
+
+
+class AdminMediaContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MediaContent
+        fields = [
+            "id", "title", "description", "platform", "embed_type",
+            "source_url", "category", "is_featured", "is_active",
+            "published_at", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_source_url(self, value):
+        platform, _ = _detect_platform(value)
+        if platform is None:
+            raise serializers.ValidationError(
+                "URL non reconnue. Seuls les liens Facebook et YouTube sont acceptés."
+            )
+        if platform == "facebook":
+            value = _resolve_facebook_share_url(value)
+        return value
+
+    def create(self, validated_data):
+        url = validated_data.get("source_url", "")
+        if not validated_data.get("platform"):
+            platform, embed_type = _detect_platform(url)
+            if platform:
+                validated_data["platform"] = platform
+                validated_data.setdefault("embed_type", embed_type)
+        return super().create(validated_data)
+
+
+# ===========================================================================
+# Public — Programme
+# ===========================================================================
+
+class PublicProgramItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramItem
+        fields = ["id", "title", "description", "order"]
+
+
+class PublicProgramSectionListSerializer(serializers.ModelSerializer):
+    item_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ProgramSection
+        fields = ["id", "title", "slug", "description", "icon", "cover_image", "order", "item_count"]
+
+
+class PublicProgramSectionDetailSerializer(serializers.ModelSerializer):
+    items = PublicProgramItemSerializer(many=True, read_only=True, source="active_items")
+
+    class Meta:
+        model = ProgramSection
+        fields = ["id", "title", "slug", "description", "icon", "cover_image", "order", "items"]
+
+
+# ===========================================================================
+# Public — Événements / Agenda
+# ===========================================================================
+
+class PublicEventListSerializer(serializers.ModelSerializer):
+    computed_status = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id", "title", "slug", "short_description", "cover_image",
+            "event_type", "status", "computed_status",
+            "start_date", "end_date",
+            "location", "city",
+            "is_featured", "published_at",
+        ]
+
+
+class PublicEventDetailSerializer(serializers.ModelSerializer):
+    computed_status = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id", "title", "slug", "description", "short_description", "cover_image",
+            "event_type", "status", "computed_status",
+            "start_date", "end_date",
+            "location", "city", "address", "map_url",
+            "organizer", "contact_email", "contact_phone",
+            "is_featured", "published_at", "created_at",
+        ]
+
+
+# ===========================================================================
+# Admin — Programme
+# ===========================================================================
+
+class AdminProgramItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramItem
+        fields = ["id", "section", "title", "description", "order", "is_active", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class AdminProgramSectionSerializer(serializers.ModelSerializer):
+    items = AdminProgramItemSerializer(many=True, read_only=True)
+    item_count = serializers.IntegerField(read_only=True)
+    cover_image = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = ProgramSection
+        fields = [
+            "id", "title", "slug", "description", "icon", "cover_image",
+            "order", "is_active", "item_count", "items",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "slug", "item_count", "items", "created_at", "updated_at"]
+
+    def validate_cover_image(self, value):
+        if value:
+            return validate_image_file(value, "Image de section")
+        return value
+
+    def create(self, validated_data):
+        validated_data["slug"] = slugify(validated_data["title"])
+        return super().create(validated_data)
+
+
+# ===========================================================================
+# Admin — Événements / Agenda
+# ===========================================================================
+
+class AdminEventListSerializer(serializers.ModelSerializer):
+    computed_status = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id", "title", "slug", "event_type", "status", "computed_status",
+            "start_date", "end_date", "city", "location",
+            "is_featured", "is_active", "published_at", "created_at",
+        ]
+
+
+class AdminEventDetailSerializer(serializers.ModelSerializer):
+    computed_status = serializers.CharField(read_only=True)
+    cover_image = serializers.ImageField(required=False, allow_null=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id", "title", "slug", "description", "short_description", "cover_image",
+            "event_type", "status", "computed_status",
+            "start_date", "end_date",
+            "location", "city", "address", "map_url",
+            "organizer", "contact_email", "contact_phone",
+            "is_featured", "is_active", "published_at",
+            "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "slug", "computed_status", "created_at", "updated_at"]
+
+    def validate_cover_image(self, value):
+        if value:
+            return validate_image_file(value, "Image de couverture")
+        return value
+
+    def create(self, validated_data):
+        slug = slugify(validated_data["title"])
+        base_slug = slug
+        counter = 1
+        while Event.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        validated_data["slug"] = slug
+
+        if not validated_data.get("published_at") and validated_data.get("status") != Event.StatusChoices.CANCELLED:
+            validated_data["published_at"] = timezone.now()
+
+        return super().create(validated_data)

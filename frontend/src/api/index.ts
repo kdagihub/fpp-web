@@ -35,12 +35,14 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryableConfig | undefined
 
+    const skipRefreshUrls = ['/auth/token/refresh/', '/auth/login/', '/auth/me/']
+    const shouldSkip = skipRefreshUrls.some((u) => originalRequest?.url?.includes(u))
+
     if (
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes('/auth/token/refresh/') &&
-      !originalRequest.url?.includes('/auth/login/')
+      !shouldSkip
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {

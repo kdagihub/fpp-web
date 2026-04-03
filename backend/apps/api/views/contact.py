@@ -35,7 +35,11 @@ class PublicContactView(APIView):
     def post(self, request):
         serializer = PublicContactSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        instance = serializer.save()
+
+        from apps.accounts.tasks import notify_contact_message
+        notify_contact_message.delay(str(instance.pk))
+
         return Response(
             {"detail": "Votre message a été envoyé. Nous vous répondrons dans les plus brefs délais."},
             status=status.HTTP_201_CREATED,

@@ -275,6 +275,7 @@ EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=True)
 EMAIL_TIMEOUT = env.int("EMAIL_TIMEOUT", default=30)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="info@fpp-ci.online")
 SERVER_EMAIL = env("SERVER_EMAIL", default="info@fpp-ci.online")
+CONTACT_DEST_EMAIL = env("CONTACT_DEST_EMAIL", default="info@fpp-ci.online")
 
 # ---------------------------------------------------------------------------
 # Divers

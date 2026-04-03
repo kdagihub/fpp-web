@@ -11,12 +11,23 @@ const NewsView = () => import('@/views/public/NewsView.vue')
 const NewsDetailView = () => import('@/views/public/NewsDetailView.vue')
 const JoinView = () => import('@/views/public/JoinView.vue')
 const ContactView = () => import('@/views/public/ContactView.vue')
+const ProgrammeView = () => import('@/views/public/ProgrammeView.vue')
+const AgendaView = () => import('@/views/public/AgendaView.vue')
+const FppTvView = () => import('@/views/public/FppTvView.vue')
 
 /* ── Auth views ── */
 const LoginView = () => import('@/views/auth/LoginView.vue')
 const VerifyEmailView = () => import('@/views/auth/VerifyEmailView.vue')
 const PasswordResetView = () => import('@/views/auth/PasswordResetView.vue')
 const PasswordResetConfirmView = () => import('@/views/auth/PasswordResetConfirmView.vue')
+
+/* ── Member views ── */
+const MemberLayout = () => import('@/layouts/MemberLayout.vue')
+const MemberDashboardView = () => import('@/views/member/DashboardView.vue')
+const MemberProfileView = () => import('@/views/member/ProfileView.vue')
+const MemberCardView = () => import('@/views/member/CardView.vue')
+const MemberSettingsView = () => import('@/views/member/SettingsView.vue')
+const MemberJoinView = () => import('@/views/member/JoinView.vue')
 
 /* ── Admin views ── */
 const AdminDashboardView = () => import('@/views/admin/DashboardView.vue')
@@ -34,10 +45,11 @@ const router = createRouter({
     return savedPosition ?? { top: 0 }
   },
   routes: [
-    /* ── Public ── */
+    /* ── Public (accessible uniquement aux visiteurs non connectés) ── */
     {
       path: '/',
       component: PublicLayout,
+      meta: { publicOnly: true },
       children: [
         { path: '', name: 'home', component: HomeView },
         { path: 'a-propos', name: 'about', component: AboutView },
@@ -45,6 +57,9 @@ const router = createRouter({
         { path: 'actualites/:slug', name: 'news-detail', component: NewsDetailView, props: true },
         { path: 'adherer', name: 'join', component: JoinView },
         { path: 'contact', name: 'contact', component: ContactView },
+        { path: 'programme', name: 'programme', component: ProgrammeView },
+        { path: 'agenda', name: 'agenda', component: AgendaView },
+        { path: 'fpp-tv', name: 'fpp-tv', component: FppTvView },
       ],
     },
 
@@ -71,6 +86,25 @@ const router = createRouter({
       name: 'password-reset-confirm',
       component: PasswordResetConfirmView,
       meta: { guest: true },
+    },
+
+    /* ── Espace Membre ── */
+    {
+      path: '/mon-espace',
+      component: MemberLayout,
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', name: 'member-dashboard', component: MemberDashboardView },
+        { path: 'profil', name: 'member-profile', component: MemberProfileView },
+        { path: 'carte', name: 'member-card', component: MemberCardView },
+        { path: 'parametres', name: 'member-settings', component: MemberSettingsView },
+        { path: 'adhesion', name: 'member-join', component: MemberJoinView },
+        { path: 'actualites', name: 'member-news', component: NewsView },
+        { path: 'actualites/:slug', name: 'member-news-detail', component: NewsDetailView, props: true },
+        { path: 'agenda', name: 'member-agenda', component: AgendaView },
+        { path: 'programme', name: 'member-programme', component: ProgrammeView },
+        { path: 'fpp-tv', name: 'member-fpp-tv', component: FppTvView },
+      ],
     },
 
     /* ── Admin ── */
@@ -157,9 +191,14 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
     await auth.init()
   }
 
-  // Guest-only routes (login, register) — redirect if already logged in
+  // Guest-only routes (login, password-reset) — redirect if already logged in
   if (to.meta.guest && auth.isAuthenticated) {
-    return auth.isAdmin ? '/admin/dashboard' : '/'
+    return auth.isAdmin ? '/admin/dashboard' : '/mon-espace'
+  }
+
+  // Public pages — authenticated non-admin users are redirected to /mon-espace
+  if (to.matched.some(r => r.meta.publicOnly) && auth.isAuthenticated && !auth.isAdmin) {
+    return '/mon-espace'
   }
 
   // Protected routes — redirect if not authenticated
@@ -169,7 +208,7 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
 
   // Admin routes — redirect if not staff
   if (to.meta.requiresAdmin && !auth.isAdmin) {
-    return '/'
+    return '/mon-espace'
   }
 
   // Permission-based routes
