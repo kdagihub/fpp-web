@@ -92,7 +92,7 @@ const infoItems = computed(() => [
 <template>
   <div>
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-8">
+    <div class="flex items-center gap-3 mb-6 sm:mb-8">
       <RouterLink to="/mon-espace" class="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-all no-underline">
         <ArrowLeft :size="18" />
       </RouterLink>
@@ -102,10 +102,10 @@ const infoItems = computed(() => [
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
       <!-- ─── AVATAR + IDENTITÉ ─── -->
-      <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm text-center">
+      <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-sm text-center">
         <div class="relative w-24 h-24 mx-auto mb-4">
           <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden shadow-md">
             <img
@@ -189,8 +189,8 @@ const infoItems = computed(() => [
       </div>
 
       <!-- ─── INFORMATIONS DÉTAILLÉES ─── -->
-      <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm">
-        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-5">Informations personnelles</h3>
+      <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-sm">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4 sm:mb-5">Informations personnelles</h3>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
             v-for="(item, i) in infoItems"
@@ -214,9 +214,9 @@ const infoItems = computed(() => [
         </div>
 
         <!-- Adhésion section -->
-        <div v-if="membership" class="mt-6 pt-6 border-t border-gray-100">
-          <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">Détails de l'adhésion</h3>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div v-if="membership" class="mt-5 pt-5 sm:mt-6 sm:pt-6 border-t border-gray-100">
+          <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide mb-3 sm:mb-4">Détails de l'adhésion</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div class="p-3 rounded-xl bg-gray-50/80">
               <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">Document d'identité</p>
               <p class="text-sm text-gray-800 font-medium mt-0.5">{{ membership.id_document_type?.toUpperCase() }}</p>

@@ -55,6 +55,7 @@ pyasn1_modules==0.4.2
 pycparser==3.0
 PyJWT==2.12.1
 pyOpenSSL==26.0.0
+pyzipper==0.3.6
 python-crontab==3.3.0
 python-dateutil==2.9.0.post0
 redis==7.3.0

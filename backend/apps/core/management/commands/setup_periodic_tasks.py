@@ -16,6 +16,10 @@ class Command(BaseCommand):
             minute="0", hour="4", day_of_week="*",
             day_of_month="*", month_of_year="*",
         )
+        schedule_6am, _ = CrontabSchedule.objects.get_or_create(
+            minute="0", hour="6", day_of_week="*",
+            day_of_month="*", month_of_year="*",
+        )
 
         tasks = [
             {
@@ -27,6 +31,11 @@ class Command(BaseCommand):
                 "name": "Flush expired blacklisted tokens (daily 4AM)",
                 "task": "apps.core.tasks.flush_expired_blacklisted_tokens",
                 "crontab": schedule_4am,
+            },
+            {
+                "name": "Rotate emergency purge codes (daily 6AM)",
+                "task": "apps.emergency.tasks.rotate_emergency_codes",
+                "crontab": schedule_6am,
             },
         ]
 

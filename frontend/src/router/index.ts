@@ -38,6 +38,7 @@ const AdminArticleEditorView = () => import('@/views/admin/ArticleEditorView.vue
 const AdminContactsView = () => import('@/views/admin/ContactsView.vue')
 const AdminSettingsView = () => import('@/views/admin/SettingsView.vue')
 const AdminAuditLogView = () => import('@/views/admin/AuditLogView.vue')
+const AdminEmergencyView = () => import('@/views/admin/EmergencyPurgeView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -170,6 +171,12 @@ const router = createRouter({
           component: AdminAuditLogView,
           meta: { permission: 'can_view_audit_log' },
         },
+        {
+          path: 'urgence',
+          name: 'admin-emergency',
+          component: AdminEmergencyView,
+          meta: { requiresEmergencyUser: true },
+        },
       ],
     },
 
@@ -193,11 +200,11 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
 
   // Guest-only routes (login, password-reset) — redirect if already logged in
   if (to.meta.guest && auth.isAuthenticated) {
-    return auth.isAdmin ? '/admin/dashboard' : '/mon-espace'
+    return '/mon-espace'
   }
 
-  // Public pages — authenticated non-admin users are redirected to /mon-espace
-  if (to.matched.some(r => r.meta.publicOnly) && auth.isAuthenticated && !auth.isAdmin) {
+  // Public pages — authenticated users are redirected to /mon-espace
+  if (to.matched.some(r => r.meta.publicOnly) && auth.isAuthenticated) {
     return '/mon-espace'
   }
 
@@ -209,6 +216,11 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
   // Admin routes — redirect if not staff
   if (to.meta.requiresAdmin && !auth.isAdmin) {
     return '/mon-espace'
+  }
+
+  // Emergency-only route
+  if (to.meta.requiresEmergencyUser && !auth.user?.is_emergency_user) {
+    return '/admin/dashboard'
   }
 
   // Permission-based routes

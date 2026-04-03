@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block content_title %}<h1>{{ title }}</h1>{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <div style="margin-bottom: 20px; padding: 15px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px;">
+    <strong style="color: #92400e;">Procédure d'urgence</strong>
+    <p style="margin: 8px 0 0; color: #78350f;">
+      {{ total_emails }} adresse{{ total_emails|pluralize }} configurée{{ total_emails|pluralize }},
+      {{ active_codes }} code{{ active_codes|pluralize }} actif{{ active_codes|pluralize }}.
+    </p>
+  </div>
+
+  {% if emails %}
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align: left; padding: 10px; border-bottom: 2px solid #e5e7eb; font-weight: 600;">Email</th>
+        <th style="text-align: center; padding: 10px; border-bottom: 2px solid #e5e7eb; font-weight: 600;">Code actif</th>
+        <th style="text-align: center; padding: 10px; border-bottom: 2px solid #e5e7eb; font-weight: 600;">TTL restant</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in emails %}
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #f3f4f6;">{{ item.email }}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #f3f4f6; text-align: center;">
+          {% if item.has_active_code %}
+            <span style="color: #059669; font-weight: 600;">&#10003; Oui</span>
+          {% else %}
+            <span style="color: #dc2626; font-weight: 600;">&#10007; Non</span>
+          {% endif %}
+        </td>
+        <td style="padding: 10px; border-bottom: 1px solid #f3f4f6; text-align: center;">
+          {% if item.ttl_seconds != None and item.ttl_seconds > 0 %}
+            {{ item.ttl_seconds|floatformat:0 }}s (~{{ item.ttl_seconds|divisibleby:3600 }}h)
+          {% elif item.has_active_code %}
+            <span style="color: #6b7280;">N/A</span>
+          {% else %}
+            <span style="color: #6b7280;">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p style="color: #6b7280; padding: 20px;">
+      Aucune adresse email d'urgence configurée. Ajoutez <code>EMERGENCY_EMAILS</code> dans les variables d'environnement.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

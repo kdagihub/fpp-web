@@ -12,6 +12,7 @@ export interface User {
   avatar?: string
   is_staff: boolean
   is_active: boolean
+  is_emergency_user?: boolean
   created_at: string
   membership?: MembershipSummary | null
   active_roles?: ActiveRole[]

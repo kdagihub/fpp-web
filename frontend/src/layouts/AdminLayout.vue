@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   ChevronLeft,
+  AlertTriangle,
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
@@ -30,6 +31,8 @@ const sidebarItems = computed(() => {
   ]
   return items.filter((item) => authStore.hasPermission(item.permission))
 })
+
+const isEmergencyUser = computed(() => !!authStore.user?.is_emergency_user)
 
 function isActive(path: string): boolean {
   return route.path.startsWith(path)
@@ -74,11 +77,24 @@ async function handleLogout() {
       <!-- Bottom section -->
       <div class="p-4 border-t border-[var(--color-border)]">
         <RouterLink
-          to="/"
+          v-if="isEmergencyUser"
+          to="/admin/urgence"
+          class="flex items-center gap-2 px-3 py-2 text-sm font-medium no-underline rounded-lg transition-all mb-1"
+          :class="[
+            isActive('/admin/urgence')
+              ? 'bg-red-100 text-red-700'
+              : 'text-red-500 hover:bg-red-50 hover:text-red-700'
+          ]"
+        >
+          <AlertTriangle :size="18" />
+          Urgence
+        </RouterLink>
+        <RouterLink
+          to="/mon-espace"
           class="flex items-center gap-2 px-3 py-2 text-sm text-[var(--color-muted)] no-underline hover:text-[var(--color-primary)] transition-colors"
         >
           <ChevronLeft :size="18" />
-          Retour au site
+          Mon espace
         </RouterLink>
         <button
           @click="handleLogout"
@@ -142,6 +158,20 @@ async function handleLogout() {
           </RouterLink>
         </nav>
         <div class="p-4 border-t border-[var(--color-border)]">
+          <RouterLink
+            v-if="isEmergencyUser"
+            to="/admin/urgence"
+            class="flex items-center gap-2 px-3 py-2 text-sm font-medium no-underline rounded-lg transition-all mb-1"
+            :class="[
+              isActive('/admin/urgence')
+                ? 'bg-red-100 text-red-700'
+                : 'text-red-500 hover:bg-red-50 hover:text-red-700'
+            ]"
+            @click="sidebarOpen = false"
+          >
+            <AlertTriangle :size="18" />
+            Urgence
+          </RouterLink>
           <button
             @click="handleLogout"
             class="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--color-error)] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { LogOut, ChevronDown, ArrowLeft } from 'lucide-vue-next'
+import { LogOut, ChevronDown, ArrowLeft, Shield } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { getMediaUrl } from '@/utils/media'
 import logoFpp from '@/assets/img/fpplogsf.png'
@@ -97,6 +97,15 @@ async function handleLogout() {
                 @click="dropdownOpen = false"
               >
                 Mon profil
+              </RouterLink>
+              <RouterLink
+                v-if="authStore.isAdmin"
+                to="/admin"
+                class="flex items-center gap-2 px-4 py-2.5 text-sm text-green-700 font-medium hover:bg-green-50 no-underline transition-colors"
+                @click="dropdownOpen = false"
+              >
+                <Shield :size="14" />
+                Administration
               </RouterLink>
               <div class="border-t border-gray-100 mt-1.5 pt-1.5">
                 <button

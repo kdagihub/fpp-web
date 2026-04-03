@@ -58,7 +58,7 @@ const idScanFile = ref<File | null>(null)
 const membershipStatus = ref<string | null>(null)
 
 const benefits = [
-  { icon: Users, title: 'Participer aux décisions', text: 'Votez et influencez les orientations du parti lors des congrès et assemblées.' },
+  { icon: Users, title: 'Participez à la révolution', text: 'Engagez-vous considérablement dans la lutte pour la décolonisation, la souveraineté, l\'indépendance, le progrès et le développement de la Côte d\'Ivoire.' },
   { icon: CalendarDays, title: 'Accès aux événements', text: 'Participez à nos conférences, séminaires et rencontres exclusives.' },
   { icon: Megaphone, title: 'Rejoindre la communauté', text: 'Intégrez un réseau de citoyens engagés sur tout le territoire.' },
   { icon: BookOpen, title: 'Rester informé', text: 'Recevez nos publications, analyses et notes de positionnement en avant-première.' },
@@ -170,7 +170,7 @@ onMounted(() => {
           Devenez membre du <span class="text-[var(--color-accent)]">FPP</span>
         </h1>
         <p class="text-lg text-white/60 max-w-xl mx-auto">
-          Rejoignez les milliers de citoyens engagés pour bâtir une Côte d'Ivoire plus juste, plus solidaire et plus prospère.
+          Rejoignez les milliers de camarades engagés pour bâtir une Côte d'Ivoire décolonisée, souveraine, indépendante, prospère, développée et résolument tournée vers l'avenir.
         </p>
       </div>
     </section>

@@ -44,36 +44,43 @@ const values = [
   {
     icon: Users,
     title: 'Engagement',
-    text: 'Impliquer chaque citoyen dans la vie démocratique et valoriser la participation active à notre projet commun.',
+    text: 'Impliquer les populations dans la processus révolutionnaire de transformation radicale de notre société à travers la décolonisation et valoriser la participation active à notre projet commun.',
     color: 'bg-sky-50 text-sky-600',
   },
 ]
 
 const timeline = [
-  { year: '2018', title: 'Genèse du projet', description: 'Premiers échanges autour d\'une vision politique panafricaine et citoyenne pour la Côte d\'Ivoire.' },
-  { year: '2019', title: 'Structuration', description: 'Rédaction des statuts, constitution de l\'équipe fondatrice et premières rencontres de terrain.' },
-  { year: '2021', title: 'Création officielle du FPP', description: 'Le Front Patriotique Panafricain est officiellement créé et enregistré. Premiers adhérents.' },
-  { year: '2022', title: 'Implantation nationale', description: 'Création de comités locaux dans 15 régions. Le FPP s\'enracine sur tout le territoire.' },
-  { year: '2024', title: 'Élections locales', description: '150 élus locaux sous les couleurs du FPP. Le parti devient une force politique incontournable.' },
-  { year: '2026', title: 'Congrès National', description: 'Plus de 25 000 adhérents. Le FPP présente son programme complet pour la Côte d\'Ivoire.' },
+  { year: '2020', title: 'Genèse du projet', description: 'Premiers échanges autour d\'une vision politique panafricaine et révolutionnaire pour la Côte d\'Ivoire.' },
+  { year: '2021', title: 'Création officielle du FPP', description: '20 novembre 2021 — Le Front Patriotique Panafricain est officiellement créé et enregistré.' },
+  { year: '2022', title: 'Inclusion politique des jeunes', description: 'Lutte pour une plus large inclusion politique des jeunes : être candidat à 18 ans à toutes les élections en Côte d\'Ivoire.' },
+  { year: '2023', title: 'Première apparition télévisée', description: 'Mardi 23 janvier 2023 — Première apparition sur un plateau télévisé du Président du FPP.' },
+  { year: '2024', title: 'Implantation nationale', description: 'Début d\'implantation du parti sur l\'étendue du territoire national.' },
+  { year: '2025', title: 'Meeting historique & candidature présidentielle', description: '12 juillet 2025 — Premier meeting historique du FPP. 12 août 2025 — Dépôt de candidature du Président du parti à l\'élection présidentielle de Côte d\'Ivoire.' },
+  { year: '2026', title: 'Publication & vision', description: 'Premier livre du Président du parti sur l\'engagement politique des jeunes en Côte d\'Ivoire ainsi que la vision du FPP pour la Côte d\'Ivoire et l\'Afrique.' },
 ]
 
 const bureau = [
   { name: 'Dabé Nogbo Wanaminou', role: 'Président', image: presidentImg },
-  { name: 'Marie-Louise Konan', role: 'Vice-Présidente', image: null },
-  { name: 'Ibrahim Touré', role: 'Secrétaire Général', image: null },
-  { name: 'Awa Coulibaly', role: 'Trésorière Nationale', image: null },
-  { name: 'Jean-Marc N\'Dri', role: 'Directeur de Communication', image: null },
-  { name: 'Fatou Diallo', role: 'Secrétaire aux Relations Internationales', image: null },
+  { name: 'Mahi Zoukou', role: 'Vice-Président', image: null },
+  { name: 'Traoré Moussa', role: 'Secrétaire Général National', image: null },
+  { name: 'Assaouré Kouadio', role: 'Secrétaire National aux Affaires Financières', image: null },
+  { name: 'Bamba Gnaimmon', role: 'Secrétaire National à la Formation Idéologique et Politique', image: null },
+  { name: 'Koné Peanguy Souleymane', role: 'Secrétaire National à l\'Organisation', image: null },
+  { name: 'Koné Beh Arouna', role: 'Secrétaire National à la Communication', image: null },
+  { name: 'Kouassi N\'guessan', role: 'Secrétaire National à la Mobilisation', image: null },
+  { name: 'Kouakou Akissi', role: 'Secrétaire Nationale chargée des Femmes du Parti', image: null },
+  { name: 'Djah Guy', role: 'Secrétaire National chargé de l\'Entrepreneuriat et de l\'Insertion Professionnelle', image: null },
+  { name: 'Kouadio Narcisse', role: 'Secrétaire National chargé des Alliances avec les Partis Politiques', image: null },
+  { name: 'Kouassi Kouakou Kouman', role: 'Secrétaire National chargé de l\'Environnement et du Cadre de Vie', image: null },
+  { name: 'Ballo Oumar', role: 'Conseiller Stratégique et Politique', image: null },
 ]
 
 const regions = [
-  { name: 'Abidjan', members: '8 500+' },
-  { name: 'Yamoussoukro', members: '3 200+' },
-  { name: 'Bouaké', members: '2 800+' },
-  { name: 'San-Pédro', members: '1 500+' },
-  { name: 'Korhogo', members: '1 200+' },
-  { name: 'Man', members: '1 100+' },
+  { name: 'Bouaké' },
+  { name: 'Gagnoa' },
+  { name: 'Korhogo' },
+  { name: 'San-Pédro' },
+  { name: 'Bonoua' },
 ]
 </script>
 
@@ -108,28 +115,32 @@ const regions = [
               Notre mission
             </p>
             <h2 class="font-heading text-3xl md:text-4xl font-extrabold text-[var(--color-primary)] mb-6">
-              Construire une société de confiance
+              Dignité, souveraineté, unité : pour les États-Unis d’Afrique.
             </h2>
             <div class="space-y-4 text-[var(--color-muted)] leading-relaxed">
               <p>
-                {{ settingsStore.settings?.vision_text || 'Notre vision est de créer une société de confiance en Côte d\'Ivoire, unissant tous les Ivoiriens au-delà des clivages et permettant à chacun de réaliser son potentiel.' }}
+                {{ settingsStore.settings?.vision_text || 'Unir chaque Ivoirien et chaque Ivoirienne autour de la lutte pour la décolonisation effective de la Côte d’Ivoire, comme fondement de notre développement, de notre souveraineté et de notre progrès.' }}
               </p>
               <p>
-                Notre Parti se distingue par son approche pragmatique et inclusive. Nous croyons en une politique fondée sur l'écoute, le dialogue et l'action concrète.
+                Nous défendons l’unité, la dignité et l’intégrité.
+                <br>
+                Nous agissons avec transparence et responsabilité.
+                <br>
+                Nous promouvons la justice, l’équité et la solidarité, dans le respect des droits et libertés de tous.
               </p>
             </div>
             <div class="mt-8 grid grid-cols-3 gap-6">
               <div>
-                <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]">25K+</p>
+                <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]">5000+</p>
                 <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Adhérents</p>
               </div>
               <div>
-                <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]">150</p>
-                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Élus</p>
+                <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]">1</p>
+                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Présidentielle</p>
               </div>
               <div>
-                <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]">31</p>
-                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Régions</p>
+                <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]">5</p>
+                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Régions couvertes</p>
               </div>
             </div>
           </div>
@@ -284,19 +295,16 @@ const regions = [
               Le FPP sur le terrain
             </h2>
             <p class="text-[var(--color-muted)] leading-relaxed mb-8">
-              Avec des comités locaux dans 31 régions, le Front Patriotique Panafricain est présent sur tout le territoire national, au plus près des préoccupations des Ivoiriens.
+              Avec des Coordinations Régionales dans 5 régions, le Front Patriotique Panafricain s'étend progressivement sur toute l'étendue du territoire national, au plus près des préoccupations des Ivoiriens.
             </p>
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div
                 v-for="(region, i) in regions"
                 :key="i"
                 class="flex items-center gap-3 p-3 bg-[var(--color-surface)] rounded-lg"
               >
                 <MapPin :size="16" class="text-[var(--color-accent)] shrink-0" />
-                <div>
-                  <p class="font-heading text-sm font-bold text-[var(--color-primary)]">{{ region.name }}</p>
-                  <p class="text-xs text-[var(--color-muted)]">{{ region.members }}</p>
-                </div>
+                <p class="font-heading text-sm font-bold text-[var(--color-primary)]">{{ region.name }}</p>
               </div>
             </div>
           </div>
@@ -304,19 +312,19 @@ const regions = [
           <div class="bg-[var(--color-surface)] rounded-2xl p-10 text-center">
             <div class="grid grid-cols-2 gap-8">
               <div>
-                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">31</p>
-                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Régions couvertes</p>
+                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">5</p>
+                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Régions</p>
               </div>
               <div>
-                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">150+</p>
+                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">0</p>
                 <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Élus locaux</p>
               </div>
               <div>
-                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">500+</p>
-                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Comités de base</p>
+                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">5</p>
+                <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Coordinations Régionales</p>
               </div>
               <div>
-                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">25K+</p>
+                <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]">5000+</p>
                 <p class="font-heading text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)] mt-1">Adhérents actifs</p>
               </div>
             </div>

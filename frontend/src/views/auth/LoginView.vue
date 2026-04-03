@@ -27,7 +27,7 @@ async function handleLogin() {
       password: form.value.password,
     })
     toast.success('Bienvenue !', `Connecté en tant que ${authStore.fullName}`)
-    const redirect = (route.query.redirect as string) || (authStore.isAdmin ? '/admin/dashboard' : '/mon-espace')
+    const redirect = (route.query.redirect as string) || '/mon-espace'
     router.push(redirect)
   } catch (err: any) {
     const msg = err?.response?.data?.detail || 'Email ou mot de passe incorrect.'

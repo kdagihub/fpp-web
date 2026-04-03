@@ -38,7 +38,7 @@ function dismiss() {
 
             <!-- Title -->
             <h2 class="font-heading text-xl sm:text-2xl font-extrabold text-[var(--color-primary)] mb-1 tracking-tight">
-              Bienvenue sur <span class="text-[var(--color-accent)]">FPP</span>
+              Bienvenue sur le<span class="text-[var(--color-accent)]"> FPP</span>
             </h2>
 
             <p class="font-heading text-[10px] sm:text-xs font-bold uppercase tracking-[0.12em] text-[var(--color-muted)] mb-5">
@@ -47,8 +47,8 @@ function dismiss() {
 
             <!-- Message -->
             <p class="text-sm leading-relaxed text-[var(--color-muted)] mb-6 mx-auto">
-              Ensemble, construisons une Côte d'Ivoire souveraine, prospère et unie. 
-              Rejoignez le mouvement pour un avenir panafricain.
+              Ensemble, construisons une Côte d’Ivoire décolonisée, souveraine, indépendante, développée et prospère. 
+              Rejoignez notre parti politique pour un avenir radieux.
             </p>
 
             <!-- CTA -->

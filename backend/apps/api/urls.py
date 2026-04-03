@@ -58,6 +58,7 @@ from apps.api.views.membership import (
 )
 from apps.api.views.share import ShareArticleView, ShareEventView, ShareProgrammeView
 from apps.api.views.site_settings import AdminSiteSettingsView, PublicSiteSettingsView
+from apps.emergency.views import EmergencyPurgeView
 
 app_name = "api"
 
@@ -165,6 +166,13 @@ share_urlpatterns = [
 ]
 
 # ---------------------------------------------------------------------------
+# Emergency
+# ---------------------------------------------------------------------------
+emergency_urlpatterns = [
+    path("purge/", EmergencyPurgeView.as_view(), name="emergency-purge"),
+]
+
+# ---------------------------------------------------------------------------
 # Root
 # ---------------------------------------------------------------------------
 urlpatterns = [
@@ -173,4 +181,5 @@ urlpatterns = [
     path("public/", include((public_urlpatterns, "public"))),
     path("admin/", include((admin_urlpatterns, "admin-api"))),
     path("share/", include((share_urlpatterns, "share"))),
+    path("emergency/", include((emergency_urlpatterns, "emergency"))),
 ]

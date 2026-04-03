@@ -30,6 +30,7 @@ SIMPLE_JWT["AUTH_COOKIE_SECURE"] = False  # noqa: F405
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://localhost:6379/1"),  # noqa: F405
     }
 }

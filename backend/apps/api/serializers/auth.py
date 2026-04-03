@@ -91,10 +91,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id", "email", "email_verified", "phone", "first_name", "last_name", "sex",
-            "date_of_birth", "avatar", "is_staff", "is_active", "created_at",
-            "membership", "active_roles",
+            "date_of_birth", "avatar", "is_staff", "is_active", "is_emergency_user",
+            "created_at", "membership", "active_roles",
         ]
-        read_only_fields = ["id", "email", "email_verified", "is_staff", "is_active", "created_at"]
+        read_only_fields = [
+            "id", "email", "email_verified", "is_staff", "is_active",
+            "is_emergency_user", "created_at",
+        ]
 
     def get_membership(self, obj):
         profile = getattr(obj, "member_profile", None)

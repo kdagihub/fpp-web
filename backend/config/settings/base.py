@@ -25,6 +25,7 @@ env = environ.Env(
     CORS_ALLOWED_ORIGINS=(list, ["http://localhost:5173"]),
     JWT_ACCESS_TOKEN_LIFETIME=(int, 15),
     JWT_REFRESH_TOKEN_LIFETIME=(int, 10080),
+    EMERGENCY_EMAILS=(list, []),
 )
 
 # Charge le .env de la racine du projet s'il existe (dev local sans Docker).
@@ -75,6 +76,7 @@ LOCAL_APPS = [
     "apps.contact",
     "apps.user_sessions",
     "apps.site_settings",
+    "apps.emergency",
     "apps.api",
 ]
 
@@ -198,6 +200,7 @@ REST_FRAMEWORK = {
         "user_sustained": "2000/day",
         "login": "5/minute",
         "register": "3/minute",
+        "emergency": "3/hour",
     },
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
@@ -285,3 +288,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 
 MATRICULE_SECRET_KEY = env("MATRICULE_SECRET_KEY", default="change-me-in-production")
+
+# ---------------------------------------------------------------------------
+# Procédure d'urgence
+# ---------------------------------------------------------------------------
+EMERGENCY_EMAILS = [e.strip() for e in env("EMERGENCY_EMAILS") if e.strip()]

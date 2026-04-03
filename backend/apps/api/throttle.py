@@ -23,3 +23,7 @@ class LoginThrottle(AnonRateThrottle):
 
 class RegisterThrottle(AnonRateThrottle):
     scope = "register"
+
+
+class EmergencyThrottle(UserRateThrottle):
+    scope = "emergency"

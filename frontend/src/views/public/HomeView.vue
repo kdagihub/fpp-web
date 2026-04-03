@@ -17,27 +17,27 @@ import logoFpp from '@/assets/img/fpplogsf.png'
 import presidentImg from '@/assets/img/president.png'
 
 const stats = [
-  { value: '25 000+', label: 'Adhérents' },
-  { value: '150', label: 'Élus locaux' },
-  { value: '31', label: 'Régions' },
-  { value: '8', label: 'Ans d\'engagement' },
+  { value: '5000+', label: 'Adhérents' },
+  { value: '1', label: 'Candidature à la présidence' },
+  { value: '5+', label: 'Régions' },
+  { value: '5+', label: 'Ans d\'engagement' },
 ]
 
 const pillars = [
   {
     icon: Target,
     title: 'Notre vision',
-    text: 'Créer une société de confiance en Côte d\'Ivoire, unissant tous les Ivoiriens au-delà des clivages et permettant à chacun de réaliser son potentiel. Bâtir une nation inclusive et durable.',
+    text: 'Unis chaque ivoirien et Ivoirienne au tour de la lutte pour la décolonisation de la Côte d’Ivoire, gage de notre developpement et notre progrès.',
   },
   {
     icon: Rocket,
     title: 'Notre mission',
-    text: 'Transformer la Côte d\'Ivoire en éradiquant la corruption, en promouvant la jeunesse, et en répondant aux préoccupations immédiates des citoyens. Créer une société exemplaire et de confiance.',
+    text: 'D’une part, assurez la sécurité des populations sur tous les plans, promouvoir le progrès économique, le developpement, l’intégrité, l’emplois pour tous. D’autre part promouvoir le panafricanisme dans l’optique de mener avec les autres peuples d’Afriques, le combat pour l’indépendance politique, économique, militaire, éducative, culturelle, spirituelle etc. Mais aussi et surtout mener le combat des États Unis d’Afrique.',
   },
   {
     icon: Shield,
     title: 'Nos valeurs',
-    text: 'Nous valorisons l\'intégrité, la transparence, la responsabilité. Nous promouvons la justice, l\'équité, la solidarité, et respectons les droits et libertés de tous les citoyens.',
+    text: 'Nous valorisons l’unité, la dignité, l’intégrité, la transparence, la responsabilité. Nous promouvons la justice, l’équité, la solidarité, et respectons les droits et libertés de tous les citoyens.',
   },
 ]
 
@@ -60,7 +60,7 @@ const values = [
   {
     icon: Users,
     title: 'Engagement',
-    text: 'Impliquer chaque citoyen dans la vie démocratique et valoriser la participation active à notre projet commun.',
+    text: 'Impliquer les populations dans la processus révolutionnaire de transformation radicale de notre société à travers la décolonisation et valoriser la participation active à notre projet commun.',
   },
 ]
 
@@ -112,7 +112,7 @@ const articles = [
             <span class="text-[var(--color-accent)]">l'avenir</span> ensemble
           </h1>
           <p class="text-lg text-white/70 leading-relaxed mb-10 max-w-lg">
-            Le Front Patriotique Panafricain rassemble des citoyens engagés pour bâtir une Côte d'Ivoire plus juste, plus solidaire et plus prospère. Rejoignez le Parti.
+            Le Front Patriotique Panafricain rassemble des citoyens engagés pour bâtir une Côte d’Ivoire décolonisée, souveraine, prospère et développée. Rejoignez notre parti politique.
           </p>
           <div class="flex flex-wrap gap-4">
             <RouterLink
@@ -249,14 +249,14 @@ const articles = [
               Dabé Nogbo Wanaminou
             </h2>
             <p class="text-[var(--color-accent)] font-heading font-semibold text-sm italic mb-6">
-              Pour l'amour de la justice, de l'intégrité et de la Côte d'Ivoire
+              Pour une Côte d’Ivoire décolonisée, souveraine, indépendante, développée et résolument tournée vers l’avenir.
             </p>
             <div class="space-y-4 text-[var(--color-muted)] leading-relaxed text-[15px]">
               <p>
-                Un homme dont le parcours est aussi captivant qu'engagé. Juriste de formation, acteur politique indépendant et citoyen passionné, il est un véritable architecte du changement en Côte d'Ivoire.
+                Un homme dont le parcours est aussi captivant qu'engagé. Juriste de formation, acteur politique indépendant et révolutionnaire passionné, il est un véritable architecte du changement en Côte d'Ivoire.
               </p>
               <p>
-                Depuis la création du FPP, il porte un Parti politique dont le slogan est « Construire une société de confiance » basée sur l'éducation et la formation citoyenne, la célébration du mérite et la lutte contre la corruption.
+                Depuis la création du FPP, il porte un Parti politique dont le slogan est «Allons Où On Va!» un slogan qui met en avance l’importance de la décolonisation de la Côte d’Ivoire, gage de son décollage vers son véritable progrès et developpement.
               </p>
               <p>
                 Avec une détermination inflexible et un cœur tourné vers les autres, il continue d'écrire son histoire, et celle de la Côte d'Ivoire, une page à la fois.
@@ -294,7 +294,7 @@ const articles = [
                 Notre Parti se distingue par son approche pragmatique et inclusive. Nous croyons en une politique fondée sur l'écoute, le dialogue et l'action concrète.
               </p>
               <p>
-                Avec plus de 25 000 adhérents et 150 élus locaux, nous sommes présents sur tout le territoire, au plus près des préoccupations des Ivoiriens.
+                Avec plus de 5000 adhérents répartis dans 5 régions, nous sommes présents sur tout le territoire, au plus près des préoccupations des Ivoiriens.
               </p>
             </div>
             <RouterLink
