@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
+import { useSettingsStore } from '@/stores/settings'
+import { getMediaUrl } from '@/utils/media'
 import {
   ArrowRight,
   Eye,
@@ -12,32 +14,34 @@ import {
   ChevronRight,
   Calendar,
 } from 'lucide-vue-next'
-import heroImg from '@/assets/img/hero-meeting.png'
-import logoFpp from '@/assets/img/fpplogsf.png'
-import presidentImg from '@/assets/img/president.png'
+import heroImgFallback from '@/assets/img/hero-meeting.png'
+import logoFppFallback from '@/assets/img/fpplogsf.png'
+import presidentImgFallback from '@/assets/img/president.png'
+
+const settingsStore = useSettingsStore()
 
 const stats = [
   { value: '5000+', label: 'Adhérents' },
   { value: '1', label: 'Candidature à la présidence' },
   { value: '5+', label: 'Régions' },
-  { value: '5+', label: 'Ans d\'engagement' },
+  { value: '5+', label: "Ans d'engagement" },
 ]
 
 const pillars = [
   {
     icon: Target,
     title: 'Notre vision',
-    text: 'Unis chaque ivoirien et Ivoirienne au tour de la lutte pour la décolonisation de la Côte d’Ivoire, gage de notre developpement et notre progrès.',
+    text: "Unis chaque ivoirien et Ivoirienne au tour de la lutte pour la décolonisation de la Côte d\u2019Ivoire, gage de notre developpement et notre progrès.",
   },
   {
     icon: Rocket,
     title: 'Notre mission',
-    text: 'D’une part, assurez la sécurité des populations sur tous les plans, promouvoir le progrès économique, le developpement, l’intégrité, l’emplois pour tous. D’autre part promouvoir le panafricanisme dans l’optique de mener avec les autres peuples d’Afriques, le combat pour l’indépendance politique, économique, militaire, éducative, culturelle, spirituelle etc. Mais aussi et surtout mener le combat des États Unis d’Afrique.',
+    text: "D\u2019une part, assurez la sécurité des populations sur tous les plans, promouvoir le progrès économique, le developpement, l\u2019intégrité, l\u2019emplois pour tous. D\u2019autre part promouvoir le panafricanisme dans l\u2019optique de mener avec les autres peuples d\u2019Afriques, le combat pour l\u2019indépendance politique, économique, militaire, éducative, culturelle, spirituelle etc. Mais aussi et surtout mener le combat des États Unis d\u2019Afrique.",
   },
   {
     icon: Shield,
     title: 'Nos valeurs',
-    text: 'Nous valorisons l’unité, la dignité, l’intégrité, la transparence, la responsabilité. Nous promouvons la justice, l’équité, la solidarité, et respectons les droits et libertés de tous les citoyens.',
+    text: "Nous valorisons l\u2019unité, la dignité, l\u2019intégrité, la transparence, la responsabilité. Nous promouvons la justice, l\u2019équité, la solidarité, et respectons les droits et libertés de tous les citoyens.",
   },
 ]
 
@@ -45,22 +49,22 @@ const values = [
   {
     icon: Eye,
     title: 'Transparence',
-    text: 'Une gouvernance claire et ouverte, des comptes rendus publics et une communication honnête avec les citoyens.',
+    text: "Une gouvernance claire et ouverte, des comptes rendus publics et une communication honnête avec les citoyens.",
   },
   {
     icon: Heart,
     title: 'Solidarité',
-    text: 'Renforcer les liens entre tous les Ivoiriens, soutenir les plus vulnérables et construire une société plus juste.',
+    text: "Renforcer les liens entre tous les Ivoiriens, soutenir les plus vulnérables et construire une société plus juste.",
   },
   {
     icon: Globe,
     title: 'Panafricanisme',
-    text: 'Promouvoir l\'unité africaine, la coopération entre les peuples et la souveraineté du continent.',
+    text: "Promouvoir l\u2019unité africaine, la coopération entre les peuples et la souveraineté du continent.",
   },
   {
     icon: Users,
     title: 'Engagement',
-    text: 'Impliquer les populations dans la processus révolutionnaire de transformation radicale de notre société à travers la décolonisation et valoriser la participation active à notre projet commun.',
+    text: "Impliquer les populations dans la processus révolutionnaire de transformation radicale de notre société à travers la décolonisation et valoriser la participation active à notre projet commun.",
   },
 ]
 
@@ -68,7 +72,7 @@ const articles = [
   {
     slug: 'congres-national-2026',
     title: 'Congrès National 2026 : Les grandes orientations',
-    summary: 'Retour sur les moments forts de notre congrès annuel et les décisions prises pour l\'avenir du parti.',
+    summary: "Retour sur les moments forts de notre congrès annuel et les décisions prises pour l\u2019avenir du parti.",
     category: 'Événement',
     date: '15 mars 2026',
     image: null,
@@ -76,7 +80,7 @@ const articles = [
   {
     slug: 'developpement-economique',
     title: 'Développement économique : Notre vision',
-    summary: 'Découvrez notre analyse complète et nos propositions pour une économie ivoirienne forte et inclusive.',
+    summary: "Découvrez notre analyse complète et nos propositions pour une économie ivoirienne forte et inclusive.",
     category: 'Politique',
     date: '12 mars 2026',
     image: null,
@@ -84,12 +88,40 @@ const articles = [
   {
     slug: 'education-10-mesures',
     title: 'Éducation : 10 mesures concrètes',
-    summary: 'Notre plan détaillé pour une éducation de qualité accessible à tous les enfants ivoiriens.',
+    summary: "Notre plan détaillé pour une éducation de qualité accessible à tous les enfants ivoiriens.",
     category: 'Programme',
     date: '8 mars 2026',
     image: null,
   },
 ]
+
+function heroImage() {
+  const url = settingsStore.settings?.hero_image
+  return url ? getMediaUrl(url) : heroImgFallback
+}
+
+function presidentPhoto() {
+  const url = settingsStore.settings?.president_photo
+  return url ? getMediaUrl(url) : presidentImgFallback
+}
+
+function logoImage() {
+  const url = settingsStore.settings?.logo
+  return url ? getMediaUrl(url) : logoFppFallback
+}
+
+function s(field: keyof typeof defaults): string {
+  return (settingsStore.settings as any)?.[field] || defaults[field]
+}
+
+const defaults: Record<string, string> = {
+  hero_title: "Construisons l'avenir ensemble",
+  hero_subtitle: "Le Front Patriotique Panafricain rassemble des citoyens engagés pour bâtir une Côte d'Ivoire décolonisée, souveraine, prospère et développée. Rejoignez notre parti politique.",
+  president_name: 'Dabé Nogbo Wanaminou',
+  president_message: "Un homme dont le parcours est aussi captivant qu'engagé. Juriste de formation, acteur politique indépendant et révolutionnaire passionné, il est un véritable architecte du changement en Côte d'Ivoire.\n\nDepuis la création du FPP, il porte un Parti politique dont le slogan est «Allons Où On Va!» un slogan qui met en avance l'importance de la décolonisation de la Côte d'Ivoire, gage de son décollage vers son véritable progrès et developpement.\n\nAvec une détermination inflexible et un cœur tourné vers les autres, il continue d'écrire son histoire, et celle de la Côte d'Ivoire, une page à la fois.",
+  about_text: "Fondé en 2021, le Front Patriotique Panafricain rassemble des hommes et des femmes de tous horizons, unis par une même conviction : la Côte d'Ivoire peut faire mieux, ensemble.\n\nNotre Parti se distingue par son approche pragmatique et inclusive. Nous croyons en une politique fondée sur l'écoute, le dialogue et l'action concrète.\n\nAvec plus de 5000 adhérents répartis dans 5 régions, nous sommes présents sur tout le territoire, au plus près des préoccupations des Ivoiriens.",
+  slogan: "Pour une Côte d'Ivoire décolonisée, souveraine, indépendante, développée et résolument tournée vers l'avenir.",
+}
 </script>
 
 <template>
@@ -97,7 +129,7 @@ const articles = [
     <!-- ════════════════════ HERO ════════════════════ -->
     <section class="relative overflow-hidden bg-[var(--color-primary)]">
       <img
-        :src="heroImg"
+        :src="heroImage()"
         alt="Meeting FPP — Yopougon 2025"
         class="absolute inset-0 w-full h-full object-cover opacity-40"
       >
@@ -108,11 +140,10 @@ const articles = [
             Ensemble pour la Côte d'Ivoire
           </p>
           <h1 class="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05] mb-6">
-            Construisons<br>
-            <span class="text-[var(--color-accent)]">l'avenir</span> ensemble
+            {{ s('hero_title') }}
           </h1>
           <p class="text-lg text-white/70 leading-relaxed mb-10 max-w-lg">
-            Le Front Patriotique Panafricain rassemble des citoyens engagés pour bâtir une Côte d’Ivoire décolonisée, souveraine, prospère et développée. Rejoignez notre parti politique.
+            {{ s('hero_subtitle') }}
           </p>
           <div class="flex flex-wrap gap-4">
             <RouterLink
@@ -228,8 +259,8 @@ const articles = [
           <div class="relative">
             <div class="aspect-[3/4] rounded-2xl overflow-hidden shadow-[var(--shadow-lg)]">
               <img
-                :src="presidentImg"
-                alt="Le Président du FPP"
+                :src="presidentPhoto()"
+                :alt="s('president_name')"
                 class="w-full h-full object-cover"
               >
             </div>
@@ -246,20 +277,14 @@ const articles = [
               Le Président du Parti
             </p>
             <h2 class="font-heading text-3xl md:text-4xl font-extrabold text-[var(--color-primary)] mb-2">
-              Dabé Nogbo Wanaminou
+              {{ s('president_name') }}
             </h2>
             <p class="text-[var(--color-accent)] font-heading font-semibold text-sm italic mb-6">
-              Pour une Côte d’Ivoire décolonisée, souveraine, indépendante, développée et résolument tournée vers l’avenir.
+              {{ s('slogan') }}
             </p>
             <div class="space-y-4 text-[var(--color-muted)] leading-relaxed text-[15px]">
-              <p>
-                Un homme dont le parcours est aussi captivant qu'engagé. Juriste de formation, acteur politique indépendant et révolutionnaire passionné, il est un véritable architecte du changement en Côte d'Ivoire.
-              </p>
-              <p>
-                Depuis la création du FPP, il porte un Parti politique dont le slogan est «Allons Où On Va!» un slogan qui met en avance l’importance de la décolonisation de la Côte d’Ivoire, gage de son décollage vers son véritable progrès et developpement.
-              </p>
-              <p>
-                Avec une détermination inflexible et un cœur tourné vers les autres, il continue d'écrire son histoire, et celle de la Côte d'Ivoire, une page à la fois.
+              <p v-for="(paragraph, i) in s('president_message').split('\n').filter((p: string) => p.trim())" :key="i">
+                {{ paragraph }}
               </p>
             </div>
             <RouterLink
@@ -287,14 +312,8 @@ const articles = [
               Le FPP, c'est qui ?
             </h2>
             <div class="space-y-4 text-[var(--color-muted)] leading-relaxed">
-              <p>
-                Fondé en 2021, le Front Patriotique Panafricain rassemble des hommes et des femmes de tous horizons, unis par une même conviction : la Côte d'Ivoire peut faire mieux, ensemble.
-              </p>
-              <p>
-                Notre Parti se distingue par son approche pragmatique et inclusive. Nous croyons en une politique fondée sur l'écoute, le dialogue et l'action concrète.
-              </p>
-              <p>
-                Avec plus de 5000 adhérents répartis dans 5 régions, nous sommes présents sur tout le territoire, au plus près des préoccupations des Ivoiriens.
+              <p v-for="(paragraph, i) in s('about_text').split('\n').filter((p: string) => p.trim())" :key="i">
+                {{ paragraph }}
               </p>
             </div>
             <RouterLink
@@ -310,12 +329,12 @@ const articles = [
           <div class="lg:col-span-5 flex flex-col items-center">
             <div class="bg-[var(--color-surface)] rounded-2xl p-12 flex flex-col items-center w-full">
               <img
-                :src="logoFpp"
+                :src="logoImage()"
                 alt="FPP — Front Patriotique Panafricain"
                 class="w-40 md:w-52 mb-8"
               >
               <div class="text-center">
-                <p class="font-heading text-5xl font-extrabold text-[var(--color-primary)]">8</p>
+                <p class="font-heading text-5xl font-extrabold text-[var(--color-primary)]">5</p>
                 <p class="font-heading text-xs font-bold uppercase tracking-[0.1em] text-[var(--color-muted)] mt-1">
                   ans d'engagement
                 </p>
@@ -357,7 +376,7 @@ const articles = [
             <!-- Image placeholder -->
             <div class="aspect-[16/9] bg-[var(--color-border)] relative overflow-hidden">
               <div class="absolute inset-0 flex items-center justify-center">
-                <img :src="logoFpp" alt="" class="w-16 opacity-10">
+                <img :src="logoImage()" alt="" class="w-16 opacity-10">
               </div>
               <span class="absolute top-3 left-3 px-3 py-1 bg-[var(--color-accent)] text-white text-xs font-heading font-bold uppercase tracking-[0.06em] rounded-sm">
                 {{ article.category }}

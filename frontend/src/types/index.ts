@@ -11,6 +11,7 @@ export interface User {
   date_of_birth?: string
   avatar?: string
   is_staff: boolean
+  is_superuser: boolean
   is_active: boolean
   is_emergency_user?: boolean
   created_at: string
@@ -57,6 +58,7 @@ export interface RegisterPayload {
   sex: 'M' | 'F'
   phone?: string
   date_of_birth: string
+  cgu_accepted: boolean
 }
 
 /* ── Membership ── */
@@ -254,18 +256,63 @@ export interface PublicStats {
   total_categories: number
 }
 
+/* ── Admin Members ── */
+
+export interface AdminMemberListItem {
+  id: string
+  matricule: string | null
+  first_name: string
+  last_name: string
+  email: string
+  phone: string | null
+  sex: 'M' | 'F' | ''
+  city: string
+  commune: string
+  membership_status: MembershipStatus
+  is_active: boolean
+  photo?: string
+  created_at: string
+}
+
+export interface AdminMemberDetail extends AdminMemberListItem {
+  date_of_birth: string | null
+  avatar: string | null
+  id_document_type: string
+  id_document_number: string
+  id_document_scan: string | null
+  region: string
+  neighborhood: string
+  profession: string
+  address: string
+  motivation: string
+  membership_date: string | null
+  registration_source: string
+  registered_at: string
+  active_roles: ActiveRole[]
+  updated_at: string
+}
+
 /* ── Dashboard (admin) ── */
 
 export interface DashboardData {
-  total_members: number
-  pending_members: number
-  validated_members: number
-  total_articles: number
-  published_articles: number
-  unread_contacts: number
-  members_by_city: Record<string, number>[]
-  members_by_sex: { M: number; F: number }
-  membership_evolution: { date: string; count: number }[]
+  members: {
+    total_validated: number
+    pending: number
+    recent_30d: number
+    recent_7d: number
+    by_city: { city: string; count: number }[]
+    by_status: { membership_status: string; count: number }[]
+    by_sex: { user__sex: string; count: number }[]
+    evolution: { date: string; count: number }[]
+  }
+  articles: {
+    total_published: number
+    drafts: number
+  }
+  contacts: {
+    total: number
+    unread: number
+  }
 }
 
 /* ── Audit (admin) ── */

@@ -3,7 +3,19 @@ import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
 import { useAuthStore } from '@/stores/auth'
-import { Menu, X, ArrowRight, LogIn } from 'lucide-vue-next'
+import {
+  Menu,
+  X,
+  ArrowRight,
+  LogIn,
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+} from 'lucide-vue-next'
 import logoFpp from '@/assets/img/fpplogsf.png'
 
 const settingsStore = useSettingsStore()
@@ -248,15 +260,36 @@ onMounted(() => {
             <h4 class="font-heading text-xs font-bold uppercase tracking-[0.1em] text-white/40 mb-5">
               Contact
             </h4>
-            <ul class="space-y-3 text-sm text-white/70">
-              <li v-if="settingsStore.settings?.contact_email" class="font-medium">
-                {{ settingsStore.settings.contact_email }}
+            <ul class="space-y-3.5 text-sm text-white/70">
+              <li v-if="settingsStore.settings?.contact_email">
+                <a
+                  :href="`mailto:${settingsStore.settings.contact_email}`"
+                  class="inline-flex items-center gap-2.5 no-underline text-white/70 hover:text-white transition-colors font-medium group"
+                >
+                  <span class="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 group-hover:bg-[var(--color-accent)] transition-colors shrink-0">
+                    <Mail :size="15" />
+                  </span>
+                  {{ settingsStore.settings.contact_email }}
+                </a>
               </li>
-              <li v-if="settingsStore.settings?.whatsapp_number" class="font-medium">
-                {{ settingsStore.settings.whatsapp_number }}
+              <li v-if="settingsStore.settings?.whatsapp_number">
+                <a
+                  :href="`tel:${settingsStore.settings.whatsapp_number.startsWith('+') ? settingsStore.settings.whatsapp_number : '+225' + settingsStore.settings.whatsapp_number}`"
+                  class="inline-flex items-center gap-2.5 no-underline text-white/70 hover:text-white transition-colors font-medium group"
+                >
+                  <span class="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 group-hover:bg-[var(--color-accent)] transition-colors shrink-0">
+                    <Phone :size="15" />
+                  </span>
+                  {{ settingsStore.settings.whatsapp_number.startsWith('+') ? settingsStore.settings.whatsapp_number : '+225 ' + settingsStore.settings.whatsapp_number }}
+                </a>
               </li>
-              <li v-if="settingsStore.settings?.address" class="leading-relaxed">
-                {{ settingsStore.settings.address }}
+              <li v-if="settingsStore.settings?.address">
+                <div class="inline-flex items-start gap-2.5">
+                  <span class="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 shrink-0 mt-0.5">
+                    <MapPin :size="15" />
+                  </span>
+                  <span class="leading-relaxed">{{ settingsStore.settings.address }}</span>
+                </div>
               </li>
             </ul>
           </div>
@@ -266,49 +299,48 @@ onMounted(() => {
             <h4 class="font-heading text-xs font-bold uppercase tracking-[0.1em] text-white/40 mb-5">
               Réseaux
             </h4>
-            <ul class="space-y-3">
-              <li v-if="settingsStore.settings?.facebook_url">
-                <a
-                  :href="settingsStore.settings.facebook_url"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  Facebook
-                </a>
-              </li>
-              <li v-if="settingsStore.settings?.twitter_url">
-                <a
-                  :href="settingsStore.settings.twitter_url"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  X / Twitter
-                </a>
-              </li>
-              <li v-if="settingsStore.settings?.instagram_url">
-                <a
-                  :href="settingsStore.settings.instagram_url"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  Instagram
-                </a>
-              </li>
-              <li v-if="settingsStore.settings?.youtube_url">
-                <a
-                  :href="settingsStore.settings.youtube_url"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  YouTube
-                </a>
-              </li>
-            
-            </ul>
+            <div class="flex flex-wrap gap-2.5">
+              <a
+                v-if="settingsStore.settings?.facebook_url"
+                :href="settingsStore.settings.facebook_url"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 text-white/70 no-underline hover:bg-[#1877F2] hover:text-white transition-all"
+                title="Facebook"
+              >
+                <Facebook :size="18" />
+              </a>
+              <a
+                v-if="settingsStore.settings?.twitter_url"
+                :href="settingsStore.settings.twitter_url"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 text-white/70 no-underline hover:bg-black hover:text-white transition-all"
+                title="X / Twitter"
+              >
+                <Twitter :size="18" />
+              </a>
+              <a
+                v-if="settingsStore.settings?.instagram_url"
+                :href="settingsStore.settings.instagram_url"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 text-white/70 no-underline hover:bg-gradient-to-br hover:from-[#f09433] hover:via-[#dc2743] hover:to-[#bc1888] hover:text-white transition-all"
+                title="Instagram"
+              >
+                <Instagram :size="18" />
+              </a>
+              <a
+                v-if="settingsStore.settings?.youtube_url"
+                :href="settingsStore.settings.youtube_url"
+                target="_blank"
+                rel="noopener"
+                class="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 text-white/70 no-underline hover:bg-[#FF0000] hover:text-white transition-all"
+                title="YouTube"
+              >
+                <Youtube :size="18" />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -317,14 +349,22 @@ onMounted(() => {
           <p class="text-xs text-white/30 font-medium">
             &copy; {{ new Date().getFullYear() }} Front Patriotique Panafricain. Tous droits réservés.
           </p>
-          <a
-            href="https://kdagihub.github.io/coder-showcase-studio/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-xs text-white/30 font-medium hover:text-green-400 transition-colors"
-          >
-            Développé par KDA - DEV
-          </a>
+          <div class="flex items-center gap-4">
+            <RouterLink to="/cgu" class="text-xs text-white/30 font-medium no-underline hover:text-white/60 transition-colors">
+              CGU
+            </RouterLink>
+            <RouterLink to="/politique-confidentialite" class="text-xs text-white/30 font-medium no-underline hover:text-white/60 transition-colors">
+              Confidentialité
+            </RouterLink>
+            <a
+              href="https://kdagihub.github.io/coder-showcase-studio/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-xs text-white/30 font-medium hover:text-green-400 transition-colors"
+            >
+              Développé par KDA - DEV
+            </a>
+          </div>
         </div>
       </div>
     </footer>

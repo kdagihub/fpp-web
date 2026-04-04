@@ -14,6 +14,8 @@ const ContactView = () => import('@/views/public/ContactView.vue')
 const ProgrammeView = () => import('@/views/public/ProgrammeView.vue')
 const AgendaView = () => import('@/views/public/AgendaView.vue')
 const FppTvView = () => import('@/views/public/FppTvView.vue')
+const CguView = () => import('@/views/public/CguView.vue')
+const PrivacyPolicyView = () => import('@/views/public/PrivacyPolicyView.vue')
 
 /* ── Auth views ── */
 const LoginView = () => import('@/views/auth/LoginView.vue')
@@ -38,6 +40,8 @@ const AdminArticleEditorView = () => import('@/views/admin/ArticleEditorView.vue
 const AdminContactsView = () => import('@/views/admin/ContactsView.vue')
 const AdminSettingsView = () => import('@/views/admin/SettingsView.vue')
 const AdminAuditLogView = () => import('@/views/admin/AuditLogView.vue')
+const AdminVerifyMatriculeView = () => import('@/views/admin/VerifyMatriculeView.vue')
+const AdminBureauView = () => import('@/views/admin/BureauView.vue')
 const AdminEmergencyView = () => import('@/views/admin/EmergencyPurgeView.vue')
 
 const router = createRouter({
@@ -61,6 +65,16 @@ const router = createRouter({
         { path: 'programme', name: 'programme', component: ProgrammeView },
         { path: 'agenda', name: 'agenda', component: AgendaView },
         { path: 'fpp-tv', name: 'fpp-tv', component: FppTvView },
+      ],
+    },
+
+    /* ── Pages légales (accessibles à tous) ── */
+    {
+      path: '/',
+      component: PublicLayout,
+      children: [
+        { path: 'cgu', name: 'cgu', component: CguView },
+        { path: 'politique-confidentialite', name: 'privacy-policy', component: PrivacyPolicyView },
       ],
     },
 
@@ -166,6 +180,18 @@ const router = createRouter({
           meta: { permission: 'can_manage_settings' },
         },
         {
+          path: 'verification-matricule',
+          name: 'admin-verify-matricule',
+          component: AdminVerifyMatriculeView,
+          meta: { permission: 'can_view_members' },
+        },
+        {
+          path: 'bureau',
+          name: 'admin-bureau',
+          component: AdminBureauView,
+          meta: { permission: 'can_manage_settings' },
+        },
+        {
           path: 'audit',
           name: 'admin-audit',
           component: AdminAuditLogView,
@@ -226,7 +252,7 @@ router.beforeEach(async (to: RouteLocationNormalized) => {
   // Permission-based routes
   if (to.meta.permission && typeof to.meta.permission === 'string') {
     if (!auth.hasPermission(to.meta.permission)) {
-      return '/admin/dashboard'
+      return '/mon-espace'
     }
   }
 })

@@ -51,8 +51,8 @@ class MembershipRequestView(APIView):
             request=request,
         )
 
-        from apps.accounts.tasks import notify_admins_new_registration
-        notify_admins_new_registration.delay(str(request.user.pk))
+        from apps.accounts.tasks import notify_party_membership_request
+        notify_party_membership_request.delay(str(request.user.pk))
 
         return Response(
             {"detail": "Demande d'adhésion soumise. Elle sera examinée par un administrateur."},

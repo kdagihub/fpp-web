@@ -37,8 +37,10 @@ class PublicContactView(APIView):
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
 
-        from apps.accounts.tasks import notify_contact_message
+        from apps.accounts.tasks import notify_contact_message, send_contact_acknowledgment
         notify_contact_message.delay(str(instance.pk))
+        if instance.email:
+            send_contact_acknowledgment.delay(str(instance.pk))
 
         return Response(
             {"detail": "Votre message a été envoyé. Nous vous répondrons dans les plus brefs délais."},

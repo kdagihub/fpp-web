@@ -8,6 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -86,6 +87,7 @@ class AdminMemberUpdateView(APIView):
     """Admin : modifier les informations d'un membre."""
 
     permission_classes = [IsAuthenticated, CanManageMembers]
+    parser_classes = [MultiPartParser, FormParser]
 
     def patch(self, request, pk):
         try:
@@ -101,7 +103,14 @@ class AdminMemberUpdateView(APIView):
 
         serializer = AdminMemberUpdateSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        instance = serializer.save()
+
+        clear_photo = request.data.get("clear_photo", "").lower() in ("true", "1")
+        if clear_photo and not request.FILES.get("photo"):
+            if instance.photo:
+                instance.photo.delete(save=False)
+            instance.photo = None
+            instance.save(update_fields=["photo"])
 
         AuditMixin.log_action(
             user=request.user,

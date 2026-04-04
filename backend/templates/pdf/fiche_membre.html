@@ -1,0 +1,146 @@
+{% extends "pdf/base_pdf.html" %}
+
+{% block doc_type %}Fiche d'information personnelle{% endblock %}
+{% block doc_date %}Généré le {{ generated_date }}{% endblock %}
+
+{% block content %}
+<h1>Fiche d'information <span class="accent">FPP</span></h1>
+<p class="subtitle">
+  {% if profile %}
+    Dossier complet du membre — Matricule : {{ profile.matricule|default:"En attente" }}
+  {% else %}
+    Fiche du sympathisant inscrit
+  {% endif %}
+</p>
+
+<!-- Statut -->
+<div style="margin-bottom: 16px;">
+  {% if profile and profile.membership_status == "validated" %}
+    <span class="status-badge validated">Membre actif</span>
+  {% elif profile and profile.membership_status == "pending" %}
+    <span class="status-badge pending">En attente de validation</span>
+  {% else %}
+    <span class="status-badge sympathisant">Sympathisant</span>
+  {% endif %}
+</div>
+
+<div class="section-title">Informations personnelles</div>
+
+<table class="form-table">
+  {% if profile and photo_url %}
+  <tr>
+    <td class="label">Photo</td>
+    <td class="value" style="text-align: center; padding: 10px;">
+      <div class="photo-box filled">
+        <img src="{{ photo_url }}" alt="Photo">
+      </div>
+    </td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td class="label">Nom</td>
+    <td class="value">{{ user.last_name }}</td>
+  </tr>
+  <tr>
+    <td class="label">Prénom</td>
+    <td class="value">{{ user.first_name }}</td>
+  </tr>
+  <tr>
+    <td class="label">Sexe</td>
+    <td class="value">{{ sex_display }}</td>
+  </tr>
+  <tr>
+    <td class="label">Date de naissance</td>
+    <td class="value">{{ date_of_birth }}</td>
+  </tr>
+  <tr>
+    <td class="label">Email</td>
+    <td class="value">{{ user.email }}{% if user.email_verified %} <span style="color: #00A651; font-size: 8pt; font-weight: 700;">✓ Vérifié</span>{% endif %}</td>
+  </tr>
+  <tr>
+    <td class="label">Téléphone</td>
+    <td class="value">{{ user.phone|default:"Non renseigné" }}</td>
+  </tr>
+  <tr>
+    <td class="label">Date d'inscription</td>
+    <td class="value">{{ registration_date }}</td>
+  </tr>
+</table>
+
+{% if profile %}
+<div class="section-title">Pièce d'identité</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Type de document</td>
+    <td class="value">{{ id_document_type }}</td>
+  </tr>
+  <tr>
+    <td class="label">Numéro</td>
+    <td class="value" style="font-family: monospace; letter-spacing: 1px;">{{ profile.id_document_number }}</td>
+  </tr>
+</table>
+
+<div class="section-title">Localisation</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Ville</td>
+    <td class="value">{{ profile.city }}</td>
+  </tr>
+  <tr>
+    <td class="label">Commune</td>
+    <td class="value">{{ profile.commune }}</td>
+  </tr>
+  <tr>
+    <td class="label">Région</td>
+    <td class="value">{{ profile.region|default:"Non renseignée" }}</td>
+  </tr>
+  <tr>
+    <td class="label">Quartier</td>
+    <td class="value">{{ profile.neighborhood|default:"Non renseigné" }}</td>
+  </tr>
+  <tr>
+    <td class="label">Adresse</td>
+    <td class="value">{{ profile.address|default:"Non renseignée" }}</td>
+  </tr>
+</table>
+
+{% if profile.profession %}
+<div class="section-title">Informations complémentaires</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Profession</td>
+    <td class="value">{{ profile.profession }}</td>
+  </tr>
+  {% if profile.motivation %}
+  <tr>
+    <td class="label">Motivation</td>
+    <td class="value" style="font-size: 9pt; line-height: 1.6;">{{ profile.motivation }}</td>
+  </tr>
+  {% endif %}
+  <tr>
+    <td class="label">Source d'inscription</td>
+    <td class="value">{{ registration_source }}</td>
+  </tr>
+</table>
+{% endif %}
+
+{% if profile.matricule %}
+<div class="section-title">Adhésion</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Matricule</td>
+    <td class="value" style="font-family: monospace; font-size: 12pt; font-weight: 700; color: #00A651; letter-spacing: 2px;">{{ profile.matricule }}</td>
+  </tr>
+  <tr>
+    <td class="label">Date d'adhésion</td>
+    <td class="value">{{ membership_date }}</td>
+  </tr>
+</table>
+{% endif %}
+
+{% endif %}
+{% endblock %}

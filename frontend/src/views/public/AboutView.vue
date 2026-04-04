@@ -1,26 +1,54 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useSettingsStore } from '@/stores/settings'
+import api from '@/api'
+import { getMediaUrl } from '@/utils/media'
 import {
   ArrowRight,
   Eye,
   Heart,
   Globe,
   Users,
-  Target,
-  Rocket,
-  Shield,
-  Award,
   Flag,
-  ChevronRight,
   MapPin,
-  Calendar,
+  Loader2,
 } from 'lucide-vue-next'
-import logoFpp from '@/assets/img/fpplogsf.png'
-import presidentImg from '@/assets/img/presibureau.jpeg'
-import heroAboutImg from '@/assets/img/parti2.png'
+import logoFppFallback from '@/assets/img/fpplogsf.png'
+import heroAboutImgFallback from '@/assets/img/parti2.png'
 
 const settingsStore = useSettingsStore()
+
+function heroImage() {
+  const url = settingsStore.settings?.hero_image
+  return url ? getMediaUrl(url) : heroAboutImgFallback
+}
+function logoImage() {
+  const url = settingsStore.settings?.logo
+  return url ? getMediaUrl(url) : logoFppFallback
+}
+
+interface BureauMemberPublic {
+  id: string
+  full_name: string
+  title: string
+  photo: string | null
+  order: number
+}
+
+const bureauMembers = ref<BureauMemberPublic[]>([])
+const bureauLoading = ref(true)
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get<BureauMemberPublic[]>('/public/bureau/')
+    bureauMembers.value = data
+  } catch {
+    // silently fallback to empty
+  } finally {
+    bureauLoading.value = false
+  }
+})
 
 const values = [
   {
@@ -59,22 +87,6 @@ const timeline = [
   { year: '2026', title: 'Publication & vision', description: 'Premier livre du Président du parti sur l\'engagement politique des jeunes en Côte d\'Ivoire ainsi que la vision du FPP pour la Côte d\'Ivoire et l\'Afrique.' },
 ]
 
-const bureau = [
-  { name: 'Dabé Nogbo Wanaminou', role: 'Président', image: presidentImg },
-  { name: 'Mahi Zoukou', role: 'Vice-Président', image: null },
-  { name: 'Traoré Moussa', role: 'Secrétaire Général National', image: null },
-  { name: 'Assaouré Kouadio', role: 'Secrétaire National aux Affaires Financières', image: null },
-  { name: 'Bamba Gnaimmon', role: 'Secrétaire National à la Formation Idéologique et Politique', image: null },
-  { name: 'Koné Peanguy Souleymane', role: 'Secrétaire National à l\'Organisation', image: null },
-  { name: 'Koné Beh Arouna', role: 'Secrétaire National à la Communication', image: null },
-  { name: 'Kouassi N\'guessan', role: 'Secrétaire National à la Mobilisation', image: null },
-  { name: 'Kouakou Akissi', role: 'Secrétaire Nationale chargée des Femmes du Parti', image: null },
-  { name: 'Djah Guy', role: 'Secrétaire National chargé de l\'Entrepreneuriat et de l\'Insertion Professionnelle', image: null },
-  { name: 'Kouadio Narcisse', role: 'Secrétaire National chargé des Alliances avec les Partis Politiques', image: null },
-  { name: 'Kouassi Kouakou Kouman', role: 'Secrétaire National chargé de l\'Environnement et du Cadre de Vie', image: null },
-  { name: 'Ballo Oumar', role: 'Conseiller Stratégique et Politique', image: null },
-]
-
 const regions = [
   { name: 'Bouaké' },
   { name: 'Gagnoa' },
@@ -88,7 +100,7 @@ const regions = [
   <div>
     <!-- ════════════════════ HERO ════════════════════ -->
     <section class="relative bg-[var(--color-primary)] py-24 md:py-32 overflow-hidden">
-      <img :src="heroAboutImg" alt="" class="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-40" />
+      <img :src="heroImage()" alt="" class="absolute inset-0 w-full h-full object-cover object-[center_25%] opacity-40" />
       <div class="absolute inset-0 bg-gradient-to-r from-[var(--color-primary)]/70 via-[var(--color-primary)]/40 to-transparent" />
       <div class="relative mx-auto max-w-[var(--container-xl)] px-6">
         <div class="max-w-2xl">
@@ -147,7 +159,7 @@ const regions = [
 
           <div class="flex flex-col items-center">
             <div class="bg-[var(--color-surface)] rounded-2xl p-12 w-full flex flex-col items-center">
-              <img :src="logoFpp" alt="FPP" class="w-44 md:w-56 mb-6">
+              <img :src="logoImage()" alt="FPP" class="w-44 md:w-56 mb-6">
               <p class="font-heading text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-muted)] text-center">
                 Front Patriotique Panafricain
               </p>
@@ -253,17 +265,28 @@ const regions = [
           </h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Loading state -->
+        <div v-if="bureauLoading" class="flex justify-center py-12">
+          <Loader2 :size="32" class="animate-spin text-[var(--color-accent)]" />
+        </div>
+
+        <!-- Empty state -->
+        <p v-else-if="bureauMembers.length === 0" class="text-center text-[var(--color-muted)] py-8">
+          Aucun membre du bureau renseigné pour le moment.
+        </p>
+
+        <!-- Members grid -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
-            v-for="(member, i) in bureau"
-            :key="i"
+            v-for="member in bureauMembers"
+            :key="member.id"
             class="bg-white border border-[var(--color-border)] rounded-xl overflow-hidden transition-all hover:shadow-[var(--shadow-md)]"
           >
             <div class="aspect-[4/3] bg-[var(--color-border)] relative overflow-hidden">
               <img
-                v-if="member.image"
-                :src="member.image"
-                :alt="member.name"
+                v-if="member.photo"
+                :src="getMediaUrl(member.photo)"
+                :alt="member.full_name"
                 class="w-full h-full object-cover object-top"
               >
               <div v-else class="absolute inset-0 flex items-center justify-center">
@@ -272,10 +295,10 @@ const regions = [
             </div>
             <div class="p-5 text-center">
               <h3 class="font-heading text-base font-bold text-[var(--color-primary)] mb-1">
-                {{ member.name }}
+                {{ member.full_name }}
               </h3>
               <p class="font-heading text-xs font-semibold uppercase tracking-[0.06em] text-[var(--color-accent)]">
-                {{ member.role }}
+                {{ member.title }}
               </p>
             </div>
           </div>

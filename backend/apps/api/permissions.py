@@ -38,7 +38,7 @@ class HasPermission(BasePermission):
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
-        if request.user.is_superuser:
+        if request.user.is_staff:
             return True
         perm = getattr(view, "permission_required", None)
         if perm is None:
@@ -46,91 +46,95 @@ class HasPermission(BasePermission):
         return request.user.has_perm(perm)
 
 
+def _is_staff(user):
+    return user.is_authenticated and user.is_staff
+
+
 class CanViewMembers(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("members.can_view_members")
+        return _is_staff(request.user) or request.user.has_perm("members.can_view_members")
 
 
 class CanManageMembers(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("members.can_manage_members")
+        return _is_staff(request.user) or request.user.has_perm("members.can_manage_members")
 
 
 class CanValidateMembership(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("members.can_validate_membership")
+        return _is_staff(request.user) or request.user.has_perm("members.can_validate_membership")
 
 
 class CanExportMembers(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("members.can_export_members")
+        return _is_staff(request.user) or request.user.has_perm("members.can_export_members")
 
 
 class CanCreateArticle(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_create_article")
+        return _is_staff(request.user) or request.user.has_perm("content.can_create_article")
 
 
 class CanEditArticle(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_edit_article")
+        return _is_staff(request.user) or request.user.has_perm("content.can_edit_article")
 
 
 class CanDeleteArticle(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_delete_article")
+        return _is_staff(request.user) or request.user.has_perm("content.can_delete_article")
 
 
 class CanManageCategories(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_manage_categories")
+        return _is_staff(request.user) or request.user.has_perm("content.can_manage_categories")
 
 
 class CanManageContacts(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("contact.can_manage_contacts")
+        return _is_staff(request.user) or request.user.has_perm("contact.can_manage_contacts")
 
 
 class CanExportContacts(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("contact.can_export_contacts")
+        return _is_staff(request.user) or request.user.has_perm("contact.can_export_contacts")
 
 
 class CanViewDashboard(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("core.can_view_dashboard")
+        return _is_staff(request.user) or request.user.has_perm("core.can_view_dashboard")
 
 
 class CanManageSettings(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("site_settings.can_manage_settings")
+        return _is_staff(request.user) or request.user.has_perm("site_settings.can_manage_settings")
 
 
 class CanAssignRoles(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("roles.can_assign_roles")
+        return _is_staff(request.user) or request.user.has_perm("roles.can_assign_roles")
 
 
 class CanManagePermissions(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("accounts.can_manage_permissions")
+        return _is_staff(request.user) or request.user.has_perm("accounts.can_manage_permissions")
 
 
 class CanViewAuditLog(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("core.can_view_audit_log")
+        return _is_staff(request.user) or request.user.has_perm("core.can_view_audit_log")
 
 
 class CanManageMedia(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_manage_media")
+        return _is_staff(request.user) or request.user.has_perm("content.can_manage_media")
 
 
 class CanManageProgram(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_manage_program")
+        return _is_staff(request.user) or request.user.has_perm("content.can_manage_program")
 
 
 class CanManageEvents(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_superuser or request.user.has_perm("content.can_manage_events")
+        return _is_staff(request.user) or request.user.has_perm("content.can_manage_events")

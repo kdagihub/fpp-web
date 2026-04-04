@@ -1,0 +1,78 @@
+{% extends "pdf/base_pdf.html" %}
+
+{% block doc_type %}Fiche d'inscription — Phase 1{% endblock %}
+{% block doc_date %}Sympathisant{% endblock %}
+
+{% block content %}
+<h1>Fiche d'inscription <span class="accent">FPP</span></h1>
+<p class="subtitle">Remplissez ce formulaire pour créer votre compte sympathisant auprès du Front Patriotique Panafricain.</p>
+
+<div class="section-title">Informations personnelles</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Nom</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Prénom</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Sexe</td>
+    <td class="value placeholder">☐ Masculin &nbsp;&nbsp;&nbsp; ☐ Féminin</td>
+  </tr>
+  <tr>
+    <td class="label">Date de naissance</td>
+    <td class="value placeholder">. . . . / . . . . / . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Email</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . @ . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Téléphone</td>
+    <td class="value placeholder">+ . . . . &nbsp; . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+</table>
+
+<div class="section-title">Engagement</div>
+
+<table class="form-table">
+  <tr>
+    <td colspan="2" style="padding: 12px; font-size: 9pt; color: #444444; line-height: 1.7;">
+      En signant ce formulaire, je déclare vouloir rejoindre le Front Patriotique Panafricain en tant que sympathisant.
+      Je m'engage à respecter les valeurs du parti : souveraineté, unité, dignité et service du peuple.
+      <br><br>
+      J'accepte les <strong>Conditions Générales d'Utilisation</strong> et la <strong>Politique de Confidentialité</strong>
+      du FPP, conformément à la Loi n° 2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel.
+    </td>
+  </tr>
+</table>
+
+<div class="footer-signature">
+  <div class="signature-box">
+    <div class="sig-label">Date</div>
+    <div class="sig-line">. . . . / . . . . / . . . . . . . .</div>
+  </div>
+  <div class="signature-box">
+    <div class="sig-label">Signature</div>
+    <div class="sig-line">&nbsp;</div>
+  </div>
+</div>
+
+<div style="margin-top: 30px; padding: 14px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #00A651;">
+  <p style="font-size: 8.5pt; color: #444444; line-height: 1.7; margin: 0 0 8px;">
+    <strong style="color: #00A651;">Inscription en ligne :</strong> Rendez-vous sur <strong>https://fpp-ci.online/adherer</strong> pour vous inscrire directement en ligne.
+    Vous recevrez un email de vérification pour activer votre compte.
+  </p>
+  <p style="font-size: 8.5pt; color: #444444; line-height: 1.7; margin: 0 0 8px;">
+    <strong style="color: #00A651;">Dépôt physique :</strong> Si vous ne pouvez pas vous inscrire en ligne, veuillez vous rapprocher du bureau du parti
+    pour déposer cette fiche dûment remplie et signée. Un responsable se chargera de traiter votre inscription.
+  </p>
+  <p style="font-size: 8.5pt; color: #333333; line-height: 1.7; margin: 0;">
+    <strong style="color: #00A651;">Contact :</strong>&nbsp;
+    <strong>info@fpp-ci.online</strong> &nbsp;|&nbsp; <strong>01 01 36 31 31</strong>
+  </p>
+</div>
+{% endblock %}

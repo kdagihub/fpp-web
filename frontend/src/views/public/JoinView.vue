@@ -1,61 +1,137 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppToast } from '@/composables/useToast'
-import api from '@/api'
-import type { RegisterPayload, MembershipRequestPayload } from '@/types'
 import {
   ArrowRight,
   Users,
   CalendarDays,
   Megaphone,
   BookOpen,
-  Upload,
+  FileDown,
   CheckCircle2,
-  Clock,
-  XCircle,
   Loader2,
   Eye,
   EyeOff,
+  ChevronDown,
+  Search,
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const toast = useAppToast()
 
-const step = ref<'register' | 'membership' | 'status' | 'success'>('register')
+const step = ref<'register' | 'success'>('register')
 const submitting = ref(false)
 const showPwd = ref(false)
 const showConfirm = ref(false)
+const phoneError = ref('')
+
+interface Country { name: string; code: string; dial: string; flag: string }
+
+const countries: Country[] = [
+  { name: "Côte d'Ivoire", code: 'CI', dial: '+225', flag: '🇨🇮' },
+  { name: 'Sénégal', code: 'SN', dial: '+221', flag: '🇸🇳' },
+  { name: 'Mali', code: 'ML', dial: '+223', flag: '🇲🇱' },
+  { name: 'Burkina Faso', code: 'BF', dial: '+226', flag: '🇧🇫' },
+  { name: 'Guinée', code: 'GN', dial: '+224', flag: '🇬🇳' },
+  { name: 'Ghana', code: 'GH', dial: '+233', flag: '🇬🇭' },
+  { name: 'Togo', code: 'TG', dial: '+228', flag: '🇹🇬' },
+  { name: 'Bénin', code: 'BJ', dial: '+229', flag: '🇧🇯' },
+  { name: 'Niger', code: 'NE', dial: '+227', flag: '🇳🇪' },
+  { name: 'Nigeria', code: 'NG', dial: '+234', flag: '🇳🇬' },
+  { name: 'Cameroun', code: 'CM', dial: '+237', flag: '🇨🇲' },
+  { name: 'Gabon', code: 'GA', dial: '+241', flag: '🇬🇦' },
+  { name: 'Congo', code: 'CG', dial: '+242', flag: '🇨🇬' },
+  { name: 'RD Congo', code: 'CD', dial: '+243', flag: '🇨🇩' },
+  { name: 'Maroc', code: 'MA', dial: '+212', flag: '🇲🇦' },
+  { name: 'Tunisie', code: 'TN', dial: '+216', flag: '🇹🇳' },
+  { name: 'Algérie', code: 'DZ', dial: '+213', flag: '🇩🇿' },
+  { name: 'France', code: 'FR', dial: '+33', flag: '🇫🇷' },
+  { name: 'Belgique', code: 'BE', dial: '+32', flag: '🇧🇪' },
+  { name: 'Suisse', code: 'CH', dial: '+41', flag: '🇨🇭' },
+  { name: 'Canada', code: 'CA', dial: '+1', flag: '🇨🇦' },
+  { name: 'Allemagne', code: 'DE', dial: '+49', flag: '🇩🇪' },
+  { name: 'États-Unis', code: 'US', dial: '+1', flag: '🇺🇸' },
+]
+
+const selectedCountry = ref<Country>(countries[0]!)
+const phoneDropdownOpen = ref(false)
+const phoneSearch = ref('')
+const phoneDropdownRef = ref<HTMLElement | null>(null)
+const phoneSearchRef = ref<HTMLInputElement | null>(null)
+
+const filteredCountries = computed(() => {
+  const q = phoneSearch.value.toLowerCase()
+  if (!q) return countries
+  return countries.filter(c =>
+    c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q)
+  )
+})
+
+function selectCountry(c: Country) {
+  selectedCountry.value = c
+  phoneDropdownOpen.value = false
+  phoneSearch.value = ''
+}
+
+function togglePhoneDropdown() {
+  phoneDropdownOpen.value = !phoneDropdownOpen.value
+  if (phoneDropdownOpen.value) {
+    setTimeout(() => phoneSearchRef.value?.focus(), 50)
+  }
+}
+
+function onClickOutside(e: MouseEvent) {
+  if (phoneDropdownRef.value && !phoneDropdownRef.value.contains(e.target as Node)) {
+    phoneDropdownOpen.value = false
+    phoneSearch.value = ''
+  }
+}
+
+onMounted(() => document.addEventListener('click', onClickOutside))
+onUnmounted(() => document.removeEventListener('click', onClickOutside))
+
+const phoneNumber = ref('')
+
+function validatePhone(): boolean {
+  const num = phoneNumber.value.trim()
+  if (!num) {
+    phoneError.value = ''
+    return true
+  }
+  if (!/^[0-9]{6,15}$/.test(num.replace(/[\s\-]/g, ''))) {
+    phoneError.value = 'Numéro invalide. Saisissez uniquement les chiffres sans l\'indicatif.'
+    return false
+  }
+  phoneError.value = ''
+  return true
+}
+
+function onPhoneInput(e: Event) {
+  const input = e.target as HTMLInputElement
+  phoneNumber.value = input.value.replace(/[^\d\s\-]/g, '')
+  validatePhone()
+}
+
+const fullPhone = computed(() => {
+  const num = phoneNumber.value.replace(/[\s\-]/g, '')
+  if (!num) return ''
+  return `${selectedCountry.value.dial}${num}`
+})
+
+const cguAccepted = ref(false)
 
 /* ── Registration form ── */
 const registerForm = ref({
   first_name: '',
   last_name: '',
   email: '',
-  phone: '',
   sex: '' as 'M' | 'F' | '',
   date_of_birth: '',
   password: '',
   password_confirm: '',
 })
-
-/* ── Membership form ── */
-const membershipForm = ref({
-  id_document_type: 'cni',
-  id_document_number: '',
-  city: '',
-  commune: '',
-  region: '',
-  neighborhood: '',
-  profession: '',
-  motivation: '',
-})
-const photoFile = ref<File | null>(null)
-const idScanFile = ref<File | null>(null)
-
-/* ── Membership status ── */
-const membershipStatus = ref<string | null>(null)
 
 const benefits = [
   { icon: Users, title: 'Participez à la révolution', text: 'Engagez-vous considérablement dans la lutte pour la décolonisation, la souveraineté, l\'indépendance, le progrès et le développement de la Côte d\'Ivoire.' },
@@ -64,28 +140,11 @@ const benefits = [
   { icon: BookOpen, title: 'Rester informé', text: 'Recevez nos publications, analyses et notes de positionnement en avant-première.' },
 ]
 
-const documentTypes = [
-  { value: 'cni', label: 'Carte Nationale d\'Identité' },
-  { value: 'passport', label: 'Passeport' },
-  { value: 'permis', label: 'Permis de conduire' },
-  { value: 'attestation', label: 'Attestation d\'identité' },
-]
-
-function determineStep() {
-  if (!authStore.isAuthenticated) {
-    step.value = 'register'
+async function handleRegister() {
+  if (phoneNumber.value && !validatePhone()) {
+    toast.error('Erreur', phoneError.value)
     return
   }
-  const membership = authStore.user?.membership
-  if (!membership) {
-    step.value = 'membership'
-  } else {
-    membershipStatus.value = membership.status
-    step.value = 'status'
-  }
-}
-
-async function handleRegister() {
   if (registerForm.value.password !== registerForm.value.password_confirm) {
     toast.error('Erreur', 'Les mots de passe ne correspondent pas.')
     return
@@ -96,11 +155,12 @@ async function handleRegister() {
       first_name: registerForm.value.first_name,
       last_name: registerForm.value.last_name,
       email: registerForm.value.email,
-      phone: registerForm.value.phone || undefined,
+      phone: fullPhone.value || undefined,
       sex: registerForm.value.sex as 'M' | 'F',
       date_of_birth: registerForm.value.date_of_birth,
       password: registerForm.value.password,
       password_confirm: registerForm.value.password_confirm,
+      cgu_accepted: cguAccepted.value,
     })
     step.value = 'success'
     toast.success('Inscription réussie', 'Vérifiez votre email pour activer votre compte. Pensez à regarder dans les spams.')
@@ -112,49 +172,31 @@ async function handleRegister() {
   }
 }
 
-async function handleMembership() {
-  if (!photoFile.value || !idScanFile.value) {
-    toast.error('Erreur', 'Veuillez ajouter votre photo et le scan de votre pièce d\'identité.')
-    return
-  }
-  submitting.value = true
-  const formData = new FormData()
-  formData.append('id_document_type', membershipForm.value.id_document_type)
-  formData.append('id_document_number', membershipForm.value.id_document_number)
-  formData.append('id_document_scan', idScanFile.value)
-  formData.append('photo', photoFile.value)
-  formData.append('city', membershipForm.value.city)
-  formData.append('commune', membershipForm.value.commune)
-  if (membershipForm.value.region) formData.append('region', membershipForm.value.region)
-  if (membershipForm.value.neighborhood) formData.append('neighborhood', membershipForm.value.neighborhood)
-  if (membershipForm.value.profession) formData.append('profession', membershipForm.value.profession)
-  if (membershipForm.value.motivation) formData.append('motivation', membershipForm.value.motivation)
+const pdfDownloading = ref<'registration' | 'membership' | null>(null)
 
+async function downloadPdf(type: 'registration' | 'membership') {
+  pdfDownloading.value = type
+  const endpoint = type === 'registration'
+    ? '/public/registration-form/pdf/'
+    : '/public/membership-form/pdf/'
+  const filename = type === 'registration'
+    ? 'Fiche-Inscription-FPP.pdf'
+    : 'Formulaire-Adhesion-FPP.pdf'
   try {
-    await api.post('/membership/request/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    toast.success('Demande envoyée', 'Votre demande d\'adhésion a bien été soumise.')
-    await authStore.fetchUser()
-    determineStep()
-  } catch (err: any) {
-    const msg = err?.response?.data?.detail || 'Erreur lors de l\'envoi de la demande.'
-    toast.error('Erreur', msg)
+    const { default: api } = await import('@/api')
+    const response = await api.get(endpoint, { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    toast.error('Erreur', 'Le téléchargement du formulaire a échoué. Réessayez plus tard.')
   } finally {
-    submitting.value = false
+    pdfDownloading.value = null
   }
 }
-
-function onFileChange(type: 'photo' | 'scan', event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0] ?? null
-  if (type === 'photo') photoFile.value = file
-  else idScanFile.value = file
-}
-
-onMounted(() => {
-  determineStep()
-})
 </script>
 
 <template>
@@ -209,9 +251,6 @@ onMounted(() => {
         <div v-if="step === 'register'">
           <div class="bg-white border border-[var(--color-border)] rounded-xl p-8 md:p-10">
             <div class="text-center mb-8">
-              <span class="inline-block px-3 py-1 bg-[var(--color-accent-light)] text-[var(--color-accent)] font-heading text-xs font-bold uppercase tracking-[0.06em] rounded-full mb-3">
-                Étape 1/2
-              </span>
               <h2 class="font-heading text-2xl font-extrabold text-[var(--color-primary)] mb-2">
                 Créez votre compte
               </h2>
@@ -221,6 +260,34 @@ onMounted(() => {
                   Connectez-vous
                 </RouterLink>
               </p>
+              <div class="flex items-center gap-3 mt-5 mb-2">
+                <div class="flex-1 h-px bg-[var(--color-border)]" />
+                <span class="text-xs font-semibold uppercase tracking-wide text-[var(--color-muted)]">ou téléchargez les fiches</span>
+                <div class="flex-1 h-px bg-[var(--color-border)]" />
+              </div>
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+                <button
+                  type="button"
+                  @click="downloadPdf('registration')"
+                  :disabled="!!pdfDownloading"
+                  class="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent)] font-semibold hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Loader2 v-if="pdfDownloading === 'registration'" :size="14" class="animate-spin" />
+                  <FileDown v-else :size="14" />
+                  Fiche d'inscription (PDF)
+                </button>
+                <span class="hidden sm:inline text-[var(--color-muted)]">•</span>
+                <button
+                  type="button"
+                  @click="downloadPdf('membership')"
+                  :disabled="!!pdfDownloading"
+                  class="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent)] font-semibold hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Loader2 v-if="pdfDownloading === 'membership'" :size="14" class="animate-spin" />
+                  <FileDown v-else :size="14" />
+                  Formulaire d'adhésion (PDF)
+                </button>
+              </div>
             </div>
 
             <form @submit.prevent="handleRegister" class="space-y-5">
@@ -243,7 +310,74 @@ onMounted(() => {
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Téléphone</label>
-                  <input v-model="registerForm.phone" type="tel" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
+                  <div ref="phoneDropdownRef" class="relative">
+                    <div
+                      class="flex border rounded-lg overflow-hidden transition"
+                      :class="phoneError ? 'border-red-400 ring-1 ring-red-300' : 'border-[var(--color-border)] focus-within:ring-2 focus-within:ring-[var(--color-accent)] focus-within:border-[var(--color-accent)]'"
+                    >
+                      <button
+                        type="button"
+                        @click.stop="togglePhoneDropdown"
+                        class="flex items-center gap-1 px-3 py-3 bg-[var(--color-surface)] border-r border-[var(--color-border)] hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+                      >
+                        <span class="text-base leading-none">{{ selectedCountry.flag }}</span>
+                        <span class="text-xs font-semibold text-[var(--color-primary)] whitespace-nowrap">{{ selectedCountry.dial }}</span>
+                        <ChevronDown :size="14" class="text-[var(--color-muted)] transition-transform" :class="{ 'rotate-180': phoneDropdownOpen }" />
+                      </button>
+                      <input
+                        :value="phoneNumber"
+                        @input="onPhoneInput"
+                        type="tel"
+                        inputmode="tel"
+                        placeholder="07 01 02 03 04"
+                        class="flex-1 min-w-0 px-3 py-3 text-sm focus:outline-none bg-transparent"
+                      >
+                    </div>
+
+                    <Transition
+                      enter-active-class="transition duration-150 ease-out"
+                      enter-from-class="opacity-0 -translate-y-1 scale-95"
+                      enter-to-class="opacity-100 translate-y-0 scale-100"
+                      leave-active-class="transition duration-100 ease-in"
+                      leave-from-class="opacity-100 translate-y-0 scale-100"
+                      leave-to-class="opacity-0 -translate-y-1 scale-95"
+                    >
+                      <div
+                        v-if="phoneDropdownOpen"
+                        class="absolute z-50 left-0 right-0 mt-1 bg-white border border-[var(--color-border)] rounded-lg shadow-lg overflow-hidden"
+                      >
+                        <div class="p-2 border-b border-[var(--color-border)]">
+                          <div class="relative">
+                            <Search :size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+                            <input
+                              ref="phoneSearchRef"
+                              v-model="phoneSearch"
+                              type="text"
+                              placeholder="Rechercher un pays…"
+                              class="w-full pl-8 pr-3 py-2 text-xs border border-[var(--color-border)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+                            >
+                          </div>
+                        </div>
+                        <ul class="max-h-48 overflow-y-auto">
+                          <li
+                            v-for="c in filteredCountries"
+                            :key="c.code"
+                            @click="selectCountry(c)"
+                            class="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer transition-colors"
+                            :class="c.code === selectedCountry.code ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)] font-semibold' : 'hover:bg-[var(--color-surface)]'"
+                          >
+                            <span class="text-base leading-none">{{ c.flag }}</span>
+                            <span class="flex-1 truncate">{{ c.name }}</span>
+                            <span class="text-xs text-[var(--color-muted)] font-mono">{{ c.dial }}</span>
+                          </li>
+                          <li v-if="filteredCountries.length === 0" class="px-3 py-3 text-xs text-center text-[var(--color-muted)]">
+                            Aucun résultat
+                          </li>
+                        </ul>
+                      </div>
+                    </Transition>
+                  </div>
+                  <p v-if="phoneError" class="mt-1 text-xs text-red-500">{{ phoneError }}</p>
                 </div>
                 <div>
                   <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Sexe *</label>
@@ -283,9 +417,25 @@ onMounted(() => {
                 </div>
               </div>
 
+              <div class="flex items-start gap-3">
+                <input
+                  id="cgu-checkbox"
+                  v-model="cguAccepted"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)] cursor-pointer shrink-0"
+                >
+                <label for="cgu-checkbox" class="text-xs text-[var(--color-muted)] leading-relaxed cursor-pointer select-none">
+                  J'ai lu et j'accepte les
+                  <RouterLink to="/cgu" target="_blank" class="text-[var(--color-accent)] font-semibold no-underline hover:underline">Conditions Générales d'Utilisation</RouterLink>
+                  et la
+                  <RouterLink to="/politique-confidentialite" target="_blank" class="text-[var(--color-accent)] font-semibold no-underline hover:underline">Politique de Confidentialité</RouterLink>
+                  conformément à la Loi n° 2013-450 du 19 juin 2013 relative à la protection des données à caractère personnel.
+                </label>
+              </div>
+
               <button
                 type="submit"
-                :disabled="submitting"
+                :disabled="submitting || !cguAccepted"
                 class="w-full flex items-center justify-center gap-2 px-6 py-3.5 font-heading text-sm font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white rounded-lg transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Loader2 v-if="submitting" :size="18" class="animate-spin" />
@@ -295,143 +445,6 @@ onMounted(() => {
                 </template>
               </button>
             </form>
-          </div>
-        </div>
-
-        <!-- ── STEP: MEMBERSHIP ── -->
-        <div v-else-if="step === 'membership'">
-          <div class="bg-white border border-[var(--color-border)] rounded-xl p-8 md:p-10">
-            <div class="text-center mb-8">
-              <span class="inline-block px-3 py-1 bg-[var(--color-accent-light)] text-[var(--color-accent)] font-heading text-xs font-bold uppercase tracking-[0.06em] rounded-full mb-3">
-                Étape 2/2
-              </span>
-              <h2 class="font-heading text-2xl font-extrabold text-[var(--color-primary)] mb-2">
-                Demande d'adhésion
-              </h2>
-              <p class="text-sm text-[var(--color-muted)]">
-                Complétez votre dossier pour devenir membre officiel du FPP.
-              </p>
-            </div>
-
-            <form @submit.prevent="handleMembership" class="space-y-5">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Type de pièce *</label>
-                  <select v-model="membershipForm.id_document_type" required class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition bg-white">
-                    <option v-for="doc in documentTypes" :key="doc.value" :value="doc.value">{{ doc.label }}</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">N° du document *</label>
-                  <input v-model="membershipForm.id_document_number" required type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Photo d'identité *</label>
-                  <label class="flex items-center gap-3 px-4 py-3 border border-dashed border-[var(--color-border)] rounded-lg cursor-pointer hover:border-[var(--color-accent)] transition">
-                    <Upload :size="18" class="text-[var(--color-muted)]" />
-                    <span class="text-sm text-[var(--color-muted)]">{{ photoFile?.name ?? 'Choisir un fichier' }}</span>
-                    <input type="file" accept="image/*" class="hidden" @change="onFileChange('photo', $event)">
-                  </label>
-                </div>
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Scan de la pièce *</label>
-                  <label class="flex items-center gap-3 px-4 py-3 border border-dashed border-[var(--color-border)] rounded-lg cursor-pointer hover:border-[var(--color-accent)] transition">
-                    <Upload :size="18" class="text-[var(--color-muted)]" />
-                    <span class="text-sm text-[var(--color-muted)]">{{ idScanFile?.name ?? 'Choisir un fichier' }}</span>
-                    <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="onFileChange('scan', $event)">
-                  </label>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Ville *</label>
-                  <input v-model="membershipForm.city" required type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
-                </div>
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Commune *</label>
-                  <input v-model="membershipForm.commune" required type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Région</label>
-                  <input v-model="membershipForm.region" type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
-                </div>
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Quartier</label>
-                  <input v-model="membershipForm.neighborhood" type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
-                </div>
-              </div>
-
-              <div>
-                <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Profession</label>
-                <input v-model="membershipForm.profession" type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
-              </div>
-
-              <div>
-                <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Motivation</label>
-                <textarea v-model="membershipForm.motivation" rows="3" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition resize-none" placeholder="Pourquoi souhaitez-vous rejoindre le FPP ?"></textarea>
-              </div>
-
-              <button
-                type="submit"
-                :disabled="submitting"
-                class="w-full flex items-center justify-center gap-2 px-6 py-3.5 font-heading text-sm font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white rounded-lg transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Loader2 v-if="submitting" :size="18" class="animate-spin" />
-                <template v-else>
-                  Soumettre ma demande
-                  <ArrowRight :size="18" />
-                </template>
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- ── STEP: STATUS ── -->
-        <div v-else-if="step === 'status'">
-          <div class="bg-white border border-[var(--color-border)] rounded-xl p-8 md:p-10 text-center">
-            <div v-if="membershipStatus === 'pending'" class="space-y-4">
-              <div class="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto">
-                <Clock :size="32" class="text-amber-500" />
-              </div>
-              <h2 class="font-heading text-2xl font-extrabold text-[var(--color-primary)]">Demande en cours de traitement</h2>
-              <p class="text-[var(--color-muted)] max-w-md mx-auto">
-                Votre demande d'adhésion a bien été reçue. Notre équipe l'examine actuellement. Vous serez notifié par email dès qu'une décision sera prise.
-              </p>
-            </div>
-            <div v-else-if="membershipStatus === 'validated'" class="space-y-4">
-              <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto">
-                <CheckCircle2 :size="32" class="text-emerald-500" />
-              </div>
-              <h2 class="font-heading text-2xl font-extrabold text-[var(--color-primary)]">Bienvenue au FPP !</h2>
-              <p class="text-[var(--color-muted)] max-w-md mx-auto">
-                Votre adhésion a été validée. Vous êtes désormais membre officiel du Front Patriotique Panafricain.
-              </p>
-              <p v-if="authStore.user?.membership?.matricule" class="font-heading text-lg font-bold text-[var(--color-accent)]">
-                Matricule : {{ authStore.user.membership.matricule }}
-              </p>
-            </div>
-            <div v-else-if="membershipStatus === 'rejected'" class="space-y-4">
-              <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto">
-                <XCircle :size="32" class="text-red-500" />
-              </div>
-              <h2 class="font-heading text-2xl font-extrabold text-[var(--color-primary)]">Demande refusée</h2>
-              <p class="text-[var(--color-muted)] max-w-md mx-auto">
-                Votre demande d'adhésion n'a pas été acceptée. Vous pouvez nous contacter pour plus d'informations.
-              </p>
-              <RouterLink
-                to="/contact"
-                class="inline-flex items-center gap-2 mt-4 px-6 py-3 font-heading text-sm font-bold text-white bg-[var(--color-primary)] no-underline rounded-sm cursor-pointer"
-              >
-                Nous contacter
-              </RouterLink>
-            </div>
           </div>
         </div>
 

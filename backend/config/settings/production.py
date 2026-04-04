@@ -39,3 +39,4 @@ REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [  # noqa: F405
 ]
 
 FRONTEND_URL = env("FRONTEND_URL", default="https://fpp-ci.online")  # noqa: F405
+BACKEND_URL = env("BACKEND_URL", default="https://api.fpp-ci.online")  # noqa: F405

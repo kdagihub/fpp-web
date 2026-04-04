@@ -44,3 +44,21 @@ class SiteSettings(TimeStampedModel):
         """Charge ou crée l'instance singleton."""
         obj, _ = cls.objects.get_or_create(pk=cls.objects.first().pk if cls.objects.exists() else None)
         return obj
+
+
+class BureauMember(TimeStampedModel):
+    """Membre du Bureau National — affiché sur la page 'Le Parti'."""
+
+    full_name = models.CharField(max_length=200)
+    title = models.CharField(max_length=300, help_text="Fonction ou titre au sein du parti")
+    photo = models.ImageField(upload_to="bureau/", blank=True, null=True)
+    order = models.PositiveIntegerField(default=0, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    class Meta(TimeStampedModel.Meta):
+        verbose_name = "Membre du bureau"
+        verbose_name_plural = "Membres du bureau"
+        ordering = ["order", "created_at"]
+
+    def __str__(self):
+        return f"{self.full_name} — {self.title}"

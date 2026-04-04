@@ -9,4 +9,4 @@ class MemberProfileAdmin(admin.ModelAdmin):
     list_filter = ("membership_status", "id_document_type", "registration_source", "region")
     search_fields = ("matricule", "id_document_number", "user__email", "user__first_name", "user__last_name", "city", "commune")
     readonly_fields = ("matricule", "created_at", "updated_at")
-    raw_id_fields = ("user",)
+    autocomplete_fields = ("user",)

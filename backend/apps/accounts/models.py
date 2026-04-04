@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
@@ -30,6 +31,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text="Peut déclencher la procédure de purge d'urgence.",
     )
 
+    cgu_accepted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="CGU acceptées le",
+    )
+    privacy_accepted_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name="Politique de confidentialité acceptée le",
+    )
+    cgu_ip_address = models.GenericIPAddressField(
+        null=True, blank=True,
+        verbose_name="IP lors du consentement",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -52,3 +66,30 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+
+class ConsentLog(models.Model):
+    """Historique immuable des consentements — Loi 2013-450 art. 33."""
+
+    class ConsentType(models.TextChoices):
+        CGU = "cgu", "Conditions Générales d'Utilisation"
+        PRIVACY = "privacy", "Politique de Confidentialité"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="consent_logs",
+    )
+    consent_type = models.CharField(max_length=10, choices=ConsentType.choices)
+    version = models.CharField(max_length=20, default="1.0")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, default="")
+    accepted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Journal de consentement"
+        verbose_name_plural = "Journaux de consentement"
+        ordering = ["-accepted_at"]
+
+    def __str__(self):
+        return f"{self.user} — {self.get_consent_type_display()} v{self.version} ({self.accepted_at:%d/%m/%Y %H:%M})"

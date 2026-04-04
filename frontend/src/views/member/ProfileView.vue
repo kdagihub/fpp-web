@@ -16,6 +16,7 @@ import {
   Calendar,
   Briefcase,
   User,
+  FileDown,
 } from 'lucide-vue-next'
 import dayjs from 'dayjs'
 import 'dayjs/locale/fr'
@@ -76,6 +77,25 @@ async function handleSave() {
     toast.error('Erreur', err?.response?.data?.detail || 'Impossible de mettre à jour le profil.')
   } finally {
     saving.value = false
+  }
+}
+
+const pdfDownloading = ref(false)
+
+async function downloadMyPdf() {
+  pdfDownloading.value = true
+  try {
+    const response = await api.get('/auth/me/pdf/', { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Fiche-FPP-${user.value?.first_name}-${user.value?.last_name}.pdf`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    toast.error('Erreur', 'Le téléchargement de votre fiche a échoué.')
+  } finally {
+    pdfDownloading.value = false
   }
 }
 
@@ -150,6 +170,15 @@ const infoItems = computed(() => [
             class="mt-5 w-full py-2.5 text-sm font-semibold text-gray-700 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
           >
             Modifier le profil
+          </button>
+          <button
+            @click="downloadMyPdf"
+            :disabled="pdfDownloading"
+            class="mt-2 w-full flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold text-green-700 bg-green-50 rounded-xl hover:bg-green-100 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Loader2 v-if="pdfDownloading" :size="14" class="animate-spin" />
+            <FileDown v-else :size="14" />
+            Télécharger ma fiche
           </button>
         </template>
 

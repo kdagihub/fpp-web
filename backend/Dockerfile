@@ -17,6 +17,11 @@ RUN apt-get update && \
         libpq-dev \
         libjpeg62-turbo-dev \
         zlib1g-dev \
+        libffi-dev \
+        libcairo2-dev \
+        libpango1.0-dev \
+        libgdk-pixbuf-2.0-dev \
+        libopenjp2-7-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -37,6 +42,13 @@ RUN apt-get update && \
         libpq5 \
         libjpeg62-turbo \
         zlib1g \
+        libpango-1.0-0 \
+        libpangoft2-1.0-0 \
+        libpangocairo-1.0-0 \
+        libcairo2 \
+        libgdk-pixbuf-2.0-0 \
+        libffi8 \
+        libopenjp2-7 \
     && rm -rf /var/lib/apt/lists/* \
     && addgroup --system app && adduser --system --ingroup app app
 

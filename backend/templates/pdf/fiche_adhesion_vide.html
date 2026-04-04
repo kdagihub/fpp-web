@@ -1,0 +1,135 @@
+{% extends "pdf/base_pdf.html" %}
+
+{% block doc_type %}Formulaire d'adhésion — Phase 2{% endblock %}
+{% block doc_date %}Demande de membre{% endblock %}
+
+{% block content %}
+<h1>Formulaire d'adhésion <span class="accent">FPP</span></h1>
+<p class="subtitle">Complétez ce formulaire pour devenir membre officiel du Front Patriotique Panafricain et recevoir votre carte de membre.</p>
+
+<div class="section-title">Informations personnelles</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Nom</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Prénom</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Sexe</td>
+    <td class="value placeholder">☐ Masculin &nbsp;&nbsp;&nbsp; ☐ Féminin</td>
+  </tr>
+  <tr>
+    <td class="label">Date de naissance</td>
+    <td class="value placeholder">. . . . / . . . . / . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Email</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . @ . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Téléphone</td>
+    <td class="value placeholder">+ . . . . &nbsp; . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Profession</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+</table>
+
+<div class="section-title">Pièce d'identité</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Type de document</td>
+    <td class="value placeholder">☐ CNI &nbsp;&nbsp;&nbsp; ☐ Passeport &nbsp;&nbsp;&nbsp; ☐ Permis de conduire</td>
+  </tr>
+  <tr>
+    <td class="label">Numéro</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+</table>
+
+<div class="section-title">Localisation</div>
+
+<table class="form-table">
+  <tr>
+    <td class="label">Ville</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Commune</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Région</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Quartier</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+  <tr>
+    <td class="label">Adresse</td>
+    <td class="value placeholder">. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .</td>
+  </tr>
+</table>
+
+<div class="section-title">Motivation</div>
+
+<table class="form-table">
+  <tr>
+    <td colspan="2" style="height: 80px; vertical-align: top; padding: 10px;">
+      <span style="font-size: 8pt; color: #bbbbbb;">Pourquoi souhaitez-vous rejoindre le FPP ?</span>
+    </td>
+  </tr>
+</table>
+
+<div class="section-title">Photo &amp; Documents à joindre</div>
+
+<table class="form-table">
+  <tr>
+    <td style="width: 50%; text-align: center; padding: 15px;">
+      <div class="photo-box">
+        Photo<br>d'identité<br><span style="font-size: 6pt;">format 3,5 × 4,5 cm</span>
+      </div>
+    </td>
+    <td style="width: 50%; padding: 15px; font-size: 8pt; color: #666666; line-height: 1.7;">
+      <strong>Documents requis :</strong><br>
+      ☐ Photo d'identité récente<br>
+      ☐ Copie de la pièce d'identité (recto/verso)
+    </td>
+  </tr>
+</table>
+
+<div class="footer-signature">
+  <div class="signature-box">
+    <div class="sig-label">Date</div>
+    <div class="sig-line">. . . . / . . . . / . . . . . . . .</div>
+  </div>
+  <div class="signature-box">
+    <div class="sig-label">Signature</div>
+    <div class="sig-line">&nbsp;</div>
+  </div>
+</div>
+
+<div style="margin-top: 20px; padding: 14px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #00A651;">
+  <p style="font-size: 8.5pt; color: #444444; line-height: 1.7; margin: 0 0 8px;">
+    <strong style="color: #00A651;">Adhésion en ligne :</strong> Si vous avez déjà un compte, connectez-vous sur <strong>fpp-ci.online</strong>
+    et soumettez votre demande dans la section « Devenir membre ».
+  </p>
+  <p style="font-size: 8.5pt; color: #444444; line-height: 1.7; margin: 0 0 8px;">
+    <strong style="color: #00A651;">Dépôt physique :</strong> Si vous ne pouvez pas effectuer votre demande d'adhésion en ligne,
+    veuillez vous rapprocher du bureau du parti pour déposer ce formulaire dûment rempli et signé,
+    accompagné des documents requis (photo d'identité et copie de la pièce d'identité).
+    Un responsable se chargera de traiter votre dossier.
+  </p>
+  <p style="font-size: 8.5pt; color: #333333; line-height: 1.7; margin: 0;">
+    <strong style="color: #00A651;">Contact :</strong>&nbsp;
+    <strong>info@fpp-ci.online</strong> &nbsp;|&nbsp; <strong>01 01 36 31 31</strong>
+  </p>
+</div>
+{% endblock %}

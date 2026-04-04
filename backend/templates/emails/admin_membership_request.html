@@ -1,0 +1,213 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Demande d'adhésion — FPP{% endblock %}
+{% block preheader %}{{ full_name }} souhaite devenir membre du FPP.{% endblock %}
+{% block header_tag %}Adh&eacute;sion{% endblock %}
+
+{% block content %}
+<div style="font-family: 'Inter', sans-serif;">
+
+  <!-- Status badge -->
+  <table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="background-color: #CCE5FF; border-radius: 4px; padding: 6px 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: #004085; text-transform: uppercase; letter-spacing: 1px;">&#128203; Demande d'adh&eacute;sion</span>
+      </td>
+    </tr>
+  </table>
+
+  <h1 style="font-size: 22px; font-weight: 700; color: #111111; margin: 16px 0 8px;">
+    Nouvelle demande d'adh&eacute;sion
+  </h1>
+  <p style="font-size: 14px; color: #666666; margin: 0 0 32px; line-height: 1.5;">
+    <strong style="color: #111111;">{{ full_name }}</strong> souhaite devenir membre du <strong>Front Patriotique Panafricain</strong>. Voici le dossier complet.
+  </p>
+
+  <!-- Photo du membre -->
+  {% if photo_url %}
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px;">
+    <tr>
+      <td align="center">
+        <img src="{{ photo_url }}" alt="Photo de {{ full_name }}" width="120" height="120" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #00A651;">
+      </td>
+    </tr>
+  </table>
+  {% endif %}
+
+  <!-- Section: Informations personnelles -->
+  <div style="font-size: 11px; font-weight: 700; color: #00A651; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; border-bottom: 2px solid #00A651; padding-bottom: 6px;">
+    Informations personnelles
+  </div>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 24px;">
+    <tr>
+      <td style="padding: 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Nom</span><br>
+              <span style="font-size: 14px; font-weight: 600; color: #111111;">{{ last_name }}</span>
+            </td>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Pr&eacute;nom</span><br>
+              <span style="font-size: 14px; font-weight: 600; color: #111111;">{{ first_name }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Sexe</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ sex }}</span>
+            </td>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Date de naissance</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ date_of_birth }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Email</span><br>
+              <span style="font-size: 14px; color: #111111;"><a href="mailto:{{ email }}" style="color: #00A651; text-decoration: none;">{{ email }}</a></span>
+            </td>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">T&eacute;l&eacute;phone</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ phone }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Profession</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ profession }}</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Section: Pièce d'identité -->
+  <div style="font-size: 11px; font-weight: 700; color: #00A651; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; border-bottom: 2px solid #00A651; padding-bottom: 6px;">
+    Pi&egrave;ce d'identit&eacute;
+  </div>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 24px;">
+    <tr>
+      <td style="padding: 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Type de document</span><br>
+              <span style="font-size: 14px; font-weight: 600; color: #111111;">{{ id_document_type }}</span>
+            </td>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Num&eacute;ro</span><br>
+              <span style="font-size: 14px; font-weight: 600; color: #111111;">{{ id_document_number }}</span>
+            </td>
+          </tr>
+          {% if id_scan_url %}
+          <tr>
+            <td colspan="2" style="padding: 10px 0 2px; vertical-align: top;">
+              <a href="{{ id_scan_url }}" target="_blank" style="display: inline-block; background-color: #111111; color: #ffffff; font-size: 12px; font-weight: 600; text-decoration: none; padding: 10px 20px; border-radius: 6px; letter-spacing: 0.3px;">
+                &#128196; Voir le scan du document
+              </a>
+            </td>
+          </tr>
+          {% endif %}
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Section: Localisation -->
+  <div style="font-size: 11px; font-weight: 700; color: #00A651; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; border-bottom: 2px solid #00A651; padding-bottom: 6px;">
+    Localisation
+  </div>
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 24px;">
+    <tr>
+      <td style="padding: 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Ville</span><br>
+              <span style="font-size: 14px; font-weight: 600; color: #111111;">{{ city }}</span>
+            </td>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Commune</span><br>
+              <span style="font-size: 14px; font-weight: 600; color: #111111;">{{ commune }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">R&eacute;gion</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ region }}</span>
+            </td>
+            <td width="50%" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Quartier</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ neighborhood }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding: 6px 0; vertical-align: top;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Adresse</span><br>
+              <span style="font-size: 14px; color: #111111;">{{ address }}</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Section: Motivation -->
+  {% if motivation and motivation != "Non renseignée" %}
+  <div style="font-size: 11px; font-weight: 700; color: #00A651; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; border-bottom: 2px solid #00A651; padding-bottom: 6px;">
+    Motivation
+  </div>
+  <div style="background-color: #ffffff; border: 1px solid #e5e5e5; border-left: 3px solid #00A651; border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+    <p style="font-size: 14px; color: #333333; line-height: 1.7; margin: 0; white-space: pre-wrap;">{{ motivation }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Meta -->
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px;">
+    <tr>
+      <td style="border-top: 1px solid #e8e8e8; padding-top: 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td width="50%">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Date d'inscription</span><br>
+              <span style="font-size: 13px; color: #666666;">{{ registration_date }}</span>
+            </td>
+            <td width="50%">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Source</span><br>
+              <span style="font-size: 13px; color: #666666;">{{ registration_source }}</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- CTA -->
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center" style="padding: 8px 0 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="background-color: #00A651; border-radius: 8px;">
+              <a href="{{ admin_link }}" target="_blank" style="display: inline-block; padding: 16px 48px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; letter-spacing: 0.5px;">
+                Examiner la demande
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <p style="font-size: 12px; color: #999999; text-align: center; margin-top: 16px; line-height: 1.5;">
+    Cette demande est en attente de validation dans le panneau d'administration.
+  </p>
+
+</div>
+{% endblock %}
+
+{% block footer_note %}
+Notification automatique du syst&egrave;me FPP &mdash; Demande d'adh&eacute;sion (Phase 2).<br>
+{% endblock %}

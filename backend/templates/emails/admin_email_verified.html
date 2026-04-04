@@ -1,0 +1,101 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Email confirmé — FPP{% endblock %}
+{% block preheader %}{{ full_name }} a confirmé son adresse email.{% endblock %}
+{% block header_tag %}Confirmation{% endblock %}
+
+{% block content %}
+<div style="font-family: 'Inter', sans-serif;">
+
+  <!-- Status badge -->
+  <table role="presentation" cellpadding="0" cellspacing="0">
+    <tr>
+      <td style="background-color: #D4EDDA; border-radius: 4px; padding: 6px 14px;">
+        <span style="font-size: 11px; font-weight: 700; color: #155724; text-transform: uppercase; letter-spacing: 1px;">&#10003; Email v&eacute;rifi&eacute;</span>
+      </td>
+    </tr>
+  </table>
+
+  <h1 style="font-size: 22px; font-weight: 700; color: #111111; margin: 16px 0 8px;">
+    Email confirm&eacute;
+  </h1>
+  <p style="font-size: 14px; color: #666666; margin: 0 0 32px; line-height: 1.5;">
+    Le sympathisant <strong style="color: #111111;">{{ full_name }}</strong> a v&eacute;rifi&eacute; son adresse email avec succ&egrave;s. Il peut d&eacute;sormais se connecter et soumettre une demande d'adh&eacute;sion.
+  </p>
+
+  <!-- User info card -->
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin-bottom: 32px;">
+    <tr>
+      <td style="padding: 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Nom complet</span><br>
+              <span style="font-size: 15px; font-weight: 600; color: #111111;">{{ full_name }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Email</span><br>
+              <span style="font-size: 15px; color: #111111;">
+                <a href="mailto:{{ email }}" style="color: #00A651; text-decoration: none;">{{ email }}</a>
+                <span style="display: inline-block; background-color: #00A651; color: #ffffff; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-left: 6px; vertical-align: middle;">V&Eacute;RIFI&Eacute;</span>
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">T&eacute;l&eacute;phone</span><br>
+              <span style="font-size: 15px; color: #111111;">{{ phone }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Sexe</span><br>
+              <span style="font-size: 15px; color: #111111;">{{ sex }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; border-bottom: 1px solid #e8e8e8;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Date de naissance</span><br>
+              <span style="font-size: 15px; color: #111111;">{{ date_of_birth }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0;">
+              <span style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px;">Date d'inscription</span><br>
+              <span style="font-size: 15px; color: #111111;">{{ registration_date }}</span>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- CTA -->
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td align="center" style="padding: 8px 0 16px;">
+        <table role="presentation" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="background-color: #00A651; border-radius: 8px;">
+              <a href="{{ admin_link }}" target="_blank" style="display: inline-block; padding: 16px 48px; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; letter-spacing: 0.5px;">
+                Voir dans l'administration
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <p style="font-size: 12px; color: #999999; text-align: center; margin-top: 16px; line-height: 1.5;">
+    Cet utilisateur peut maintenant soumettre une demande d'adh&eacute;sion compl&egrave;te.
+  </p>
+
+</div>
+{% endblock %}
+
+{% block footer_note %}
+Notification automatique du syst&egrave;me FPP &mdash; Confirmation email.<br>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Merci pour votre message — FPP{% endblock %}
+{% block preheader %}Votre message a bien été reçu. Le FPP vous remercie pour votre engagement.{% endblock %}
+{% block header_tag %}Accusé de réception{% endblock %}
+
+{% block content %}
+<div style="font-family: 'Inter', sans-serif;">
+
+  <h1 style="font-size: 22px; font-weight: 700; color: #111111; margin: 0 0 8px;">
+    Merci pour votre message, {{ name }} !
+  </h1>
+  <p style="font-size: 14px; color: #666666; margin: 0 0 32px; line-height: 1.5;">
+    Nous avons bien reçu votre message et nous vous en remercions sincèrement.
+  </p>
+
+  <!-- Message chaleureux -->
+  <div style="background-color: #f9f9f9; border-radius: 8px; padding: 28px; margin-bottom: 28px;">
+    <p style="font-size: 15px; color: #333333; line-height: 1.8; margin: 0 0 16px;">
+      Cher(e) <strong>{{ name }}</strong>,
+    </p>
+    <p style="font-size: 14px; color: #444444; line-height: 1.8; margin: 0 0 16px;">
+      Le <strong>Front Patriotique Panafricain</strong> vous remercie chaleureusement d'avoir pris le temps de nous écrire. Chaque voix compte dans notre combat commun pour une Afrique souveraine, unie et prospère.
+    </p>
+    <p style="font-size: 14px; color: #444444; line-height: 1.8; margin: 0 0 16px;">
+      Votre message concernant <strong>« {{ subject }} »</strong> a bien été enregistré. Notre équipe l'examinera avec la plus grande attention et vous répondra dans les meilleurs délais.
+    </p>
+    <p style="font-size: 14px; color: #444444; line-height: 1.8; margin: 0;">
+      Ensemble, nous bâtissons un avenir à la hauteur des aspirations de notre peuple. Votre engagement, même par ce simple geste, est un pas de plus vers le changement que nous portons.
+    </p>
+  </div>
+
+  <!-- Rappel du message -->
+  <div style="font-size: 10px; font-weight: 600; color: #999999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+    Récapitulatif de votre message
+  </div>
+  <div style="background-color: #ffffff; border: 1px solid #e5e5e5; border-left: 3px solid #00A651; border-radius: 6px; padding: 20px; margin-bottom: 32px;">
+    <div style="font-size: 12px; font-weight: 600; color: #00A651; margin-bottom: 8px;">{{ subject }}</div>
+    <p style="font-size: 13px; color: #555555; line-height: 1.7; margin: 0; white-space: pre-wrap;">{{ message_excerpt }}</p>
+  </div>
+
+  <!-- Signature -->
+  <div style="border-top: 1px solid #e5e5e5; padding-top: 24px; margin-top: 8px;">
+    <p style="font-size: 14px; color: #333333; line-height: 1.7; margin: 0 0 4px;">
+      Fraternellement,
+    </p>
+    <p style="font-size: 14px; font-weight: 600; color: #111111; margin: 0 0 2px;">
+      L'équipe du FPP
+    </p>
+    <p style="font-size: 12px; color: #00A651; margin: 0;">
+      Front Patriotique Panafricain — Pour une Afrique debout
+    </p>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block footer_note %}
+Ceci est un accusé de réception automatique. Merci de ne pas répondre directement à cet email.<br>
+Pour toute question urgente, contactez-nous à <a href="mailto:info@fpp-ci.online" style="color: #00A651; text-decoration: none;">info@fpp-ci.online</a>.<br>
+{% endblock %}

@@ -286,6 +286,7 @@ CONTACT_DEST_EMAIL = env("CONTACT_DEST_EMAIL", default="info@fpp-ci.online")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+BACKEND_URL = env("BACKEND_URL", default="http://localhost:8000")
 
 MATRICULE_SECRET_KEY = env("MATRICULE_SECRET_KEY", default="change-me-in-production")
 

@@ -13,6 +13,7 @@ from apps.api.views.auth import (
     VerifyEmailView,
 )
 from apps.api.views.audit import AdminAuditLogView
+from apps.api.views.bureau import AdminBureauDetailView, AdminBureauListCreateView, PublicBureauListView
 from apps.api.views.contact import (
     AdminContactDetailView,
     AdminContactExportView,
@@ -56,6 +57,12 @@ from apps.api.views.membership import (
     ValidateMembershipView,
     VerifyMatriculeView,
 )
+from apps.api.views.pdf import (
+    AdminMemberPdfView,
+    MyProfilePdfView,
+    PublicMembershipFormPdfView,
+    PublicRegistrationFormPdfView,
+)
 from apps.api.views.share import ShareArticleView, ShareEventView, ShareProgrammeView
 from apps.api.views.site_settings import AdminSiteSettingsView, PublicSiteSettingsView
 from apps.emergency.views import EmergencyPurgeView
@@ -76,6 +83,7 @@ auth_urlpatterns = [
     path("token/refresh/", CookieTokenRefreshView.as_view(), name="token-refresh"),
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("resend-verification/", ResendVerificationView.as_view(), name="resend-verification"),
+    path("me/pdf/", MyProfilePdfView.as_view(), name="my-profile-pdf"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -101,6 +109,9 @@ public_urlpatterns = [
     path("events/", PublicEventListView.as_view(), name="public-events"),
     path("events/<slug:slug>/", PublicEventDetailView.as_view(), name="public-event-detail"),
     path("stats/", PublicStatsView.as_view(), name="public-stats"),
+    path("registration-form/pdf/", PublicRegistrationFormPdfView.as_view(), name="public-registration-pdf"),
+    path("membership-form/pdf/", PublicMembershipFormPdfView.as_view(), name="public-membership-pdf"),
+    path("bureau/", PublicBureauListView.as_view(), name="public-bureau"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -116,6 +127,7 @@ admin_urlpatterns = [
     path("members/<uuid:pk>/", AdminMemberDetailView.as_view(), name="admin-member-detail"),
     path("members/<uuid:pk>/update/", AdminMemberUpdateView.as_view(), name="admin-member-update"),
     path("members/<uuid:pk>/status/", AdminMemberStatusView.as_view(), name="admin-member-status"),
+    path("members/<uuid:pk>/pdf/", AdminMemberPdfView.as_view(), name="admin-member-pdf"),
 
     # Adhesion (existant)
     path("membership/<uuid:pk>/validate/", ValidateMembershipView.as_view(), name="validate-membership"),
@@ -151,6 +163,10 @@ admin_urlpatterns = [
 
     # Settings
     path("settings/", AdminSiteSettingsView.as_view(), name="admin-settings"),
+
+    # Bureau National
+    path("bureau/", AdminBureauListCreateView.as_view(), name="admin-bureau-list"),
+    path("bureau/<uuid:pk>/", AdminBureauDetailView.as_view(), name="admin-bureau-detail"),
 
     # Audit log
     path("audit-log/", AdminAuditLogView.as_view(), name="admin-audit-log"),

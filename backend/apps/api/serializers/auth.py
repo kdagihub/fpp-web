@@ -1,11 +1,16 @@
 import datetime
+import re
 
 from django.contrib.auth import authenticate, password_validation
 from django.contrib.auth.tokens import default_token_generator
 from django.db import transaction
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.contrib.auth.models import Permission
 from rest_framework import serializers
+
+PHONE_RE = re.compile(r"^\+?[\d\s\-]{8,20}$")
 
 from apps.accounts.models import User
 
@@ -21,6 +26,7 @@ class RegisterSerializer(serializers.Serializer):
     sex = serializers.ChoiceField(choices=User.SexChoices.choices)
     phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
     date_of_birth = serializers.DateField()
+    cgu_accepted = serializers.BooleanField()
 
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
@@ -28,9 +34,16 @@ class RegisterSerializer(serializers.Serializer):
         return value.lower()
 
     def validate_phone(self, value):
-        if value and User.objects.filter(phone=value).exists():
+        if not value:
+            return None
+        cleaned = re.sub(r"[\s\-]", "", value)
+        if not PHONE_RE.match(value) or len(cleaned.lstrip("+")) < 8:
+            raise serializers.ValidationError(
+                "Numéro invalide. Utilisez uniquement des chiffres (ex: +225 0701020304)."
+            )
+        if User.objects.filter(phone=value).exists():
             raise serializers.ValidationError("Un compte avec ce numéro existe déjà.")
-        return value or None
+        return value
 
     def validate_date_of_birth(self, value):
         today = datetime.date.today()
@@ -40,6 +53,10 @@ class RegisterSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
+        if not data.get("cgu_accepted"):
+            raise serializers.ValidationError(
+                {"cgu_accepted": "Vous devez accepter les CGU et la Politique de confidentialité."}
+            )
         if data["password"] != data["password_confirm"]:
             raise serializers.ValidationError({"password_confirm": "Les mots de passe ne correspondent pas."})
         password_validation.validate_password(data["password"])
@@ -47,6 +64,8 @@ class RegisterSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         validated_data.pop("password_confirm")
+        validated_data.pop("cgu_accepted")
+        now = timezone.now()
         with transaction.atomic():
             user = User.objects.create_user(
                 email=validated_data["email"],
@@ -56,6 +75,8 @@ class RegisterSerializer(serializers.Serializer):
                 sex=validated_data["sex"],
                 phone=validated_data.get("phone"),
                 date_of_birth=validated_data["date_of_birth"],
+                cgu_accepted_at=now,
+                privacy_accepted_at=now,
             )
         return user
 
@@ -86,16 +107,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     membership = serializers.SerializerMethodField()
     active_roles = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "id", "email", "email_verified", "phone", "first_name", "last_name", "sex",
-            "date_of_birth", "avatar", "is_staff", "is_active", "is_emergency_user",
-            "created_at", "membership", "active_roles",
+            "date_of_birth", "avatar", "is_staff", "is_superuser", "is_active",
+            "is_emergency_user", "created_at", "membership", "active_roles", "permissions",
         ]
         read_only_fields = [
-            "id", "email", "email_verified", "is_staff", "is_active",
+            "id", "email", "email_verified", "is_staff", "is_superuser", "is_active",
             "is_emergency_user", "created_at",
         ]
 
@@ -130,6 +152,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
             for ur in roles
         ]
 
+    def get_permissions(self, obj):
+        if obj.is_superuser:
+            return ["*"]
+        user_perms = obj.user_permissions.all()
+        group_perms = Permission.objects.filter(group__user=obj)
+        return sorted({p.codename for p in (user_perms | group_perms)})
+
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """Modification du profil (PATCH /api/auth/me/)."""
@@ -139,9 +168,15 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
         fields = ["first_name", "last_name", "phone", "avatar"]
 
     def validate_phone(self, value):
-        if value and User.objects.filter(phone=value).exclude(pk=self.instance.pk).exists():
+        if not value:
+            return None
+        if not PHONE_RE.match(value):
+            raise serializers.ValidationError(
+                "Numéro invalide. Utilisez uniquement des chiffres (ex: +225 0701020304)."
+            )
+        if User.objects.filter(phone=value).exclude(pk=self.instance.pk).exists():
             raise serializers.ValidationError("Ce numéro est déjà utilisé.")
-        return value or None
+        return value
 
 
 class PasswordChangeSerializer(serializers.Serializer):

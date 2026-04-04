@@ -17,7 +17,7 @@ class AdminMemberListSerializer(serializers.ModelSerializer):
         model = MemberProfile
         fields = [
             "id", "matricule", "first_name", "last_name", "email", "phone", "sex",
-            "city", "commune", "membership_status", "is_active",
+            "city", "commune", "membership_status", "is_active", "photo",
             "created_at",
         ]
 
@@ -70,7 +70,7 @@ class AdminMemberUpdateSerializer(serializers.ModelSerializer):
         model = MemberProfile
         fields = [
             "city", "commune", "region", "neighborhood",
-            "profession", "address",
+            "profession", "address", "photo",
         ]
 
 

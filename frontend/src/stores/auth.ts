@@ -18,6 +18,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   function hasPermission(perm: string): boolean {
     if (user.value?.is_staff) return true
+    if (permissions.value.includes('*')) return true
     return permissions.value.includes(perm)
   }
 

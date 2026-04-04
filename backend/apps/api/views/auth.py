@@ -85,6 +85,17 @@ class RegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
+        ip = get_client_ip(request)
+        ua = request.META.get("HTTP_USER_AGENT", "")[:500]
+        user.cgu_ip_address = ip
+        user.save(update_fields=["cgu_ip_address"])
+
+        from apps.accounts.models import ConsentLog
+        ConsentLog.objects.bulk_create([
+            ConsentLog(user=user, consent_type="cgu", version="1.0", ip_address=ip, user_agent=ua),
+            ConsentLog(user=user, consent_type="privacy", version="1.0", ip_address=ip, user_agent=ua),
+        ])
+
         AuditMixin.log_action(
             user=user,
             action=AuditLog.ActionChoices.CREATE,
@@ -93,8 +104,9 @@ class RegisterView(APIView):
             request=request,
         )
 
-        from apps.accounts.tasks import send_email_verification
+        from apps.accounts.tasks import send_email_verification, notify_party_new_signup
         send_email_verification.delay(str(user.pk))
+        notify_party_new_signup.delay(str(user.pk))
 
         return Response(
             {
@@ -362,8 +374,9 @@ class VerifyEmailView(APIView):
             request=request,
         )
 
-        from apps.accounts.tasks import send_welcome_email
+        from apps.accounts.tasks import send_welcome_email, notify_party_email_verified
         send_welcome_email.delay(str(user.pk))
+        notify_party_email_verified.delay(str(user.pk))
 
         return Response({"detail": "Email vérifié avec succès. Vous pouvez maintenant vous connecter."})
 
