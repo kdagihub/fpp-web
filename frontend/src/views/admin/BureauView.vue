@@ -123,14 +123,10 @@ async function submitForm() {
 
   try {
     if (isEditing.value && editingMember.value) {
-      await api.patch(`/admin/bureau/${editingMember.value.id}/`, fd, {
-        headers: { 'Content-Type': undefined },
-      })
+      await api.patch(`/admin/bureau/${editingMember.value.id}/`, fd)
       toast.success('Modifié', `${form.value.full_name} a été mis à jour.`)
     } else {
-      await api.post('/admin/bureau/', fd, {
-        headers: { 'Content-Type': undefined },
-      })
+      await api.post('/admin/bureau/', fd)
       toast.success('Ajouté', `${form.value.full_name} a été ajouté au bureau.`)
     }
     showDialog.value = false
@@ -146,9 +142,7 @@ async function toggleVisibility(member: BureauMember) {
   try {
     const fd = new FormData()
     fd.append('is_active', String(!member.is_active))
-    await api.patch(`/admin/bureau/${member.id}/`, fd, {
-      headers: { 'Content-Type': undefined },
-    })
+    await api.patch(`/admin/bureau/${member.id}/`, fd)
     member.is_active = !member.is_active
     toast.success('Mis à jour', `${member.full_name} est maintenant ${member.is_active ? 'visible' : 'masqué'}.`)
   } catch {

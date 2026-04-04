@@ -32,6 +32,7 @@ import {
   BadgeCheck,
   Settings,
   Shield,
+  Tv,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
@@ -55,6 +56,7 @@ const shortcuts = computed(() => {
     { to: '/admin/membres', label: 'Membres', icon: Users, permission: 'can_view_members', color: 'text-green-600', bg: 'bg-green-50 hover:bg-green-100' },
     { to: '/admin/verification-matricule', label: 'Vérifier matricule', icon: BadgeCheck, permission: 'can_view_members', color: 'text-indigo-600', bg: 'bg-indigo-50 hover:bg-indigo-100' },
     { to: '/admin/articles', label: 'Articles', icon: FileText, permission: 'can_create_article', color: 'text-blue-600', bg: 'bg-blue-50 hover:bg-blue-100' },
+    { to: '/admin/fpp-tv', label: 'FPP TV', icon: Tv, permission: 'can_manage_media', color: 'text-purple-600', bg: 'bg-purple-50 hover:bg-purple-100' },
     { to: '/admin/contacts', label: 'Contacts', icon: Mail, permission: 'can_manage_contacts', color: 'text-orange-600', bg: 'bg-orange-50 hover:bg-orange-100' },
     { to: '/admin/parametres', label: 'Paramètres', icon: Settings, permission: 'can_manage_settings', color: 'text-gray-600', bg: 'bg-gray-50 hover:bg-gray-100' },
     { to: '/admin/audit', label: 'Audit', icon: Shield, permission: 'can_view_audit_log', color: 'text-purple-600', bg: 'bg-purple-50 hover:bg-purple-100' },

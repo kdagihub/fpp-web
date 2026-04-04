@@ -30,6 +30,13 @@ function processQueue(error: AxiosError | null) {
   failedQueue = []
 }
 
+api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    config.headers.delete('Content-Type')
+  }
+  return config
+})
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {

@@ -138,9 +138,7 @@ async function handleSubmit() {
   if (membershipForm.value.motivation) formData.append('motivation', membershipForm.value.motivation)
 
   try {
-    await api.post('/membership/request/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    await api.post('/membership/request/', formData)
     toast.success('Demande envoyée', "Votre demande d'adhésion a bien été soumise.")
     await authStore.fetchUser()
   } catch (err: any) {

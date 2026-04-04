@@ -65,9 +65,7 @@ async function handleSave() {
     if (form.value.phone) formData.append('phone', form.value.phone)
     if (avatarFile.value) formData.append('avatar', avatarFile.value)
 
-    await api.patch('/auth/me/', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    await api.patch('/auth/me/', formData)
     await authStore.fetchUser()
     editing.value = false
     avatarFile.value = null

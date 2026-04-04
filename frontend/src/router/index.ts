@@ -38,6 +38,7 @@ const AdminMemberDetailView = () => import('@/views/admin/MemberDetailView.vue')
 const AdminArticlesView = () => import('@/views/admin/ArticlesView.vue')
 const AdminArticleEditorView = () => import('@/views/admin/ArticleEditorView.vue')
 const AdminContactsView = () => import('@/views/admin/ContactsView.vue')
+const AdminMediaView = () => import('@/views/admin/AdminMediaView.vue')
 const AdminSettingsView = () => import('@/views/admin/SettingsView.vue')
 const AdminAuditLogView = () => import('@/views/admin/AuditLogView.vue')
 const AdminVerifyMatriculeView = () => import('@/views/admin/VerifyMatriculeView.vue')
@@ -166,6 +167,12 @@ const router = createRouter({
           component: AdminArticleEditorView,
           props: true,
           meta: { permission: 'can_edit_article' },
+        },
+        {
+          path: 'fpp-tv',
+          name: 'admin-media',
+          component: AdminMediaView,
+          meta: { permission: 'can_manage_media' },
         },
         {
           path: 'contacts',

@@ -192,6 +192,69 @@ export interface MediaContent {
   published_at: string
 }
 
+export interface AdminMediaContent extends MediaContent {
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminContactListItem {
+  id: string
+  name: string
+  email: string
+  subject: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface AdminContactDetail {
+  id: string
+  name: string
+  email: string
+  phone: string
+  subject: string
+  message: string
+  is_read: boolean
+  read_at: string | null
+  created_at: string
+}
+
+/* ── Admin — Articles ── */
+
+export type ArticleStatus = 'draft' | 'published' | 'archived'
+
+export interface AdminArticleListItem {
+  id: string
+  title: string
+  slug: string
+  summary: string
+  cover_image: string | null
+  status: ArticleStatus
+  author_name: string
+  category_name: string
+  is_featured: boolean
+  published_at: string | null
+  created_at: string
+}
+
+export interface AdminArticleDetail extends AdminArticleListItem {
+  content: string
+  author: string | null
+  category: string | null
+  deleted_at: string | null
+  updated_at: string
+}
+
+export interface AdminCategory {
+  id: string
+  name: string
+  slug: string
+  description: string
+  is_active: boolean
+  article_count: number
+  created_at: string
+}
+
 /* ── Content — Programme ── */
 
 export interface ProgramItem {

@@ -184,9 +184,7 @@ async function saveEdit() {
       fd.append('clear_photo', 'true')
     }
 
-    const { data } = await api.patch(`/admin/members/${props.id}/update/`, fd, {
-      headers: { 'Content-Type': undefined },
-    })
+    const { data } = await api.patch(`/admin/members/${props.id}/update/`, fd)
     member.value = data
     toast.success('Membre modifié', 'Les informations ont été mises à jour.')
     editDialogOpen.value = false
