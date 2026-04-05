@@ -49,9 +49,13 @@
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td>
-                    <!-- Logo text -->
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
+                        {% if logo_url %}
+                        <td style="padding-right: 14px; vertical-align: middle;">
+                          <img src="{{ logo_url }}" alt="FPP" width="44" height="44" style="width: 44px; height: auto; display: block;">
+                        </td>
+                        {% endif %}
                         <td style="border-left: 4px solid #00A651; padding-left: 16px;">
                           <div style="font-family: 'Inter', sans-serif; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 3px; line-height: 1;">FPP</div>
                           <div style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 500; color: #00A651; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; line-height: 1;">Front Patriotique Panafricain</div>

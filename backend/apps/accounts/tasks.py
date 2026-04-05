@@ -39,6 +39,8 @@ def _get_party_recipients():
 def _send_html_email(subject, template_name, context, recipient_list, reply_to=None):
     """Render an HTML email from a template and send with plain-text fallback."""
     context.setdefault("year", datetime.now().year)
+    backend_url = getattr(settings, "BACKEND_URL", "https://api.fpp-ci.online")
+    context.setdefault("logo_url", f"{backend_url}/static/img/logo-fpp.png")
 
     html_content = render_to_string(template_name, context)
     text_content = strip_tags(html_content)
