@@ -3,6 +3,8 @@ import { ref } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
 import { useAppToast } from '@/composables/useToast'
 import api from '@/api'
+import { VueTelInput } from 'vue-tel-input'
+import 'vue-tel-input/vue-tel-input.css'
 import {
   Mail,
   Phone,
@@ -13,6 +15,8 @@ import {
   Twitter,
   Instagram,
   Youtube,
+  Clock,
+  Headset,
 } from 'lucide-vue-next'
 
 const settingsStore = useSettingsStore()
@@ -26,16 +30,28 @@ const form = ref({
   message: '',
 })
 
+const phoneValid = ref(false)
+const phoneTouched = ref(false)
+
+function onPhoneValidate(validation: any) {
+  phoneValid.value = !!validation.valid
+}
+
 const submitting = ref(false)
 const submitted = ref(false)
 
 async function handleSubmit() {
+  phoneTouched.value = true
+  if (!form.value.phone || !phoneValid.value) {
+    toast.error('Erreur', !form.value.phone ? 'Le numéro de téléphone est obligatoire.' : 'Numéro de téléphone invalide.')
+    return
+  }
   submitting.value = true
   try {
     await api.post('/public/contact/', {
       name: form.value.name,
       email: form.value.email,
-      phone: form.value.phone || undefined,
+      phone: form.value.phone,
       subject: form.value.subject,
       message: form.value.message,
     })
@@ -98,7 +114,7 @@ const socials = [
                 </p>
                 <button
                   class="mt-6 px-6 py-2.5 font-heading text-sm font-bold text-[var(--color-accent)] border-2 border-[var(--color-accent)] rounded-sm cursor-pointer hover:bg-[var(--color-accent)] hover:text-white transition-all"
-                  @click="submitted = false; form = { name: '', email: '', phone: '', subject: '', message: '' }"
+                  @click="submitted = false; phoneTouched = false; phoneValid = false; form = { name: '', email: '', phone: '', subject: '', message: '' }"
                 >
                   Envoyer un autre message
                 </button>
@@ -117,11 +133,22 @@ const socials = [
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Téléphone</label>
-                    <input v-model="form.phone" type="tel" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
+                  <div class="sm:col-span-2 md:col-span-1">
+                    <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Téléphone *</label>
+                    <vue-tel-input
+                      v-model="form.phone"
+                      mode="international"
+                      default-country="CI"
+                      :dropdown-options="{ showDialCodeInSelection: true, showFlags: true, showSearchBox: true }"
+                      :input-options="{ placeholder: '07 01 02 03 04', styleClasses: 'text-sm' }"
+                      :class="['vue-tel-input--custom', { 'vue-tel-input--error': phoneTouched && (!form.phone || !phoneValid) }]"
+                      @validate="onPhoneValidate"
+                      @blur="phoneTouched = true"
+                    />
+                    <p v-if="phoneTouched && !form.phone" class="mt-1 text-xs text-red-500">Le numéro de téléphone est obligatoire.</p>
+                    <p v-else-if="phoneTouched && form.phone && !phoneValid" class="mt-1 text-xs text-red-500">Numéro de téléphone invalide.</p>
                   </div>
-                  <div>
+                  <div class="sm:col-span-2 md:col-span-1">
                     <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Sujet *</label>
                     <input v-model="form.subject" required type="text" class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition">
                   </div>
@@ -186,6 +213,22 @@ const socials = [
                   <p class="font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1">Adresse</p>
                   <p class="text-sm font-medium text-[var(--color-primary)] leading-relaxed">
                     {{ settingsStore.settings.address }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Disponibilité -->
+              <div class="bg-[var(--color-accent-light)] border border-[var(--color-accent)]/15 rounded-xl p-5">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center shrink-0">
+                    <Headset :size="18" class="text-[var(--color-accent)]" />
+                  </div>
+                  <p class="font-heading text-sm font-bold text-[var(--color-primary)]">Secrétariat disponible 24h/24, 7j/7</p>
+                </div>
+                <div class="flex items-start gap-2 ml-12">
+                  <Clock :size="13" class="text-[var(--color-muted)] shrink-0 mt-0.5" />
+                  <p class="text-xs text-[var(--color-muted)] leading-relaxed">
+                    Le délai de réponse peut varier selon le volume de demandes. Nous nous engageons à traiter chaque message dans les meilleurs délais.
                   </p>
                 </div>
               </div>

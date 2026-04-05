@@ -30,6 +30,7 @@ export interface MembershipSummary {
   region: string
   neighborhood: string
   profession: string
+  photo: string | null
   membership_validated_at: string | null
   membership_requested_at: string | null
 }
@@ -376,6 +377,29 @@ export interface DashboardData {
     total: number
     unread: number
   }
+}
+
+/* ── Content — Documents ── */
+
+export type DocumentCategory = 'statuts' | 'rapport' | 'communique' | 'formulaire' | 'autre'
+
+export interface PublicDocument {
+  id: string
+  title: string
+  description: string
+  category: DocumentCategory
+  file_url: string
+  file_size: number
+  download_count: number
+  uploaded_by_name: string
+  created_at: string
+}
+
+export interface AdminDocument extends PublicDocument {
+  file: string
+  is_public: boolean
+  uploaded_by: string | null
+  updated_at: string
 }
 
 /* ── Audit (admin) ── */

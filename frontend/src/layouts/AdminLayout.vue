@@ -19,6 +19,7 @@ import {
   BadgeCheck,
   Crown,
   Tv,
+  FolderDown,
 } from 'lucide-vue-next'
 import { getMediaUrl } from '@/utils/media'
 import logoImg from '@/assets/img/fpplogsf.png'
@@ -46,6 +47,7 @@ const sidebarItems = computed(() => {
     { to: '/admin/verification-matricule', label: 'Vérifier matricule', icon: BadgeCheck, permission: 'can_view_members' },
     { to: '/admin/articles', label: 'Articles', icon: FileText, permission: 'can_create_article' },
     { to: '/admin/fpp-tv', label: 'FPP TV', icon: Tv, permission: 'can_manage_media' },
+    { to: '/admin/documents', label: 'Documents', icon: FolderDown, permission: 'can_manage_documents' },
     { to: '/admin/contacts', label: 'Contacts', icon: Mail, permission: 'can_manage_contacts' },
     { to: '/admin/bureau', label: 'Bureau National', icon: Crown, permission: 'can_manage_settings' },
     { to: '/admin/parametres', label: 'Paramètres', icon: Settings, permission: 'can_manage_settings' },

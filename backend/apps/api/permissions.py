@@ -138,3 +138,8 @@ class CanManageProgram(BasePermission):
 class CanManageEvents(BasePermission):
     def has_permission(self, request, view):
         return _is_staff(request.user) or request.user.has_perm("content.can_manage_events")
+
+
+class CanManageDocuments(BasePermission):
+    def has_permission(self, request, view):
+        return _is_staff(request.user) or request.user.has_perm("content.can_manage_documents")

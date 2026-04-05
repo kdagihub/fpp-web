@@ -14,6 +14,7 @@ const ContactView = () => import('@/views/public/ContactView.vue')
 const ProgrammeView = () => import('@/views/public/ProgrammeView.vue')
 const AgendaView = () => import('@/views/public/AgendaView.vue')
 const FppTvView = () => import('@/views/public/FppTvView.vue')
+const DocumentsView = () => import('@/views/public/DocumentsView.vue')
 const CguView = () => import('@/views/public/CguView.vue')
 const PrivacyPolicyView = () => import('@/views/public/PrivacyPolicyView.vue')
 
@@ -43,6 +44,7 @@ const AdminSettingsView = () => import('@/views/admin/SettingsView.vue')
 const AdminAuditLogView = () => import('@/views/admin/AuditLogView.vue')
 const AdminVerifyMatriculeView = () => import('@/views/admin/VerifyMatriculeView.vue')
 const AdminBureauView = () => import('@/views/admin/BureauView.vue')
+const AdminDocumentsView = () => import('@/views/admin/DocumentsView.vue')
 const AdminEmergencyView = () => import('@/views/admin/EmergencyPurgeView.vue')
 
 const router = createRouter({
@@ -66,6 +68,7 @@ const router = createRouter({
         { path: 'programme', name: 'programme', component: ProgrammeView },
         { path: 'agenda', name: 'agenda', component: AgendaView },
         { path: 'fpp-tv', name: 'fpp-tv', component: FppTvView },
+        { path: 'documents', name: 'documents', component: DocumentsView },
       ],
     },
 
@@ -120,6 +123,7 @@ const router = createRouter({
         { path: 'agenda', name: 'member-agenda', component: AgendaView },
         { path: 'programme', name: 'member-programme', component: ProgrammeView },
         { path: 'fpp-tv', name: 'member-fpp-tv', component: FppTvView },
+        { path: 'documents', name: 'member-documents', component: DocumentsView },
       ],
     },
 
@@ -197,6 +201,12 @@ const router = createRouter({
           name: 'admin-bureau',
           component: AdminBureauView,
           meta: { permission: 'can_manage_settings' },
+        },
+        {
+          path: 'documents',
+          name: 'admin-documents',
+          component: AdminDocumentsView,
+          meta: { permission: 'can_manage_documents' },
         },
         {
           path: 'audit',

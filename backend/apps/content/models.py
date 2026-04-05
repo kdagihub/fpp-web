@@ -273,3 +273,61 @@ class Event(TimeStampedModel):
         if self.end_date and now > self.end_date:
             return self.StatusChoices.COMPLETED
         return self.StatusChoices.ONGOING
+
+
+# ===========================================================================
+# Documents / Ressources
+# ===========================================================================
+
+class Document(TimeStampedModel):
+    """Document téléchargeable (statuts, règlement intérieur, rapports, etc.)."""
+
+    class CategoryChoices(models.TextChoices):
+        STATUTS = "statuts", "Statuts & Règlements"
+        RAPPORT = "rapport", "Rapports"
+        COMMUNIQUE = "communique", "Communiqués"
+        FORMULAIRE = "formulaire", "Formulaires"
+        AUTRE = "autre", "Autre"
+
+    title = models.CharField(max_length=300)
+    description = models.TextField(blank=True, default="")
+    file = models.FileField(upload_to="documents/%Y/%m/")
+    category = models.CharField(
+        max_length=30,
+        choices=CategoryChoices.choices,
+        default=CategoryChoices.AUTRE,
+        db_index=True,
+    )
+    is_public = models.BooleanField(
+        default=False,
+        db_index=True,
+        help_text="Si coché, le document sera visible sur la page publique.",
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_documents",
+    )
+    download_count = models.PositiveIntegerField(default=0)
+    file_size = models.PositiveIntegerField(default=0, help_text="Taille en octets.")
+
+    class Meta(TimeStampedModel.Meta):
+        verbose_name = "Document"
+        verbose_name_plural = "Documents"
+        ordering = ["-created_at"]
+        permissions = [
+            ("can_manage_documents", "Peut gérer les documents"),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if self.file and not self.file_size:
+            try:
+                self.file_size = self.file.size
+            except Exception:
+                pass
+        super().save(*args, **kwargs)

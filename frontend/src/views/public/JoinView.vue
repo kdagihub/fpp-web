@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useSettingsStore } from '@/stores/settings'
 import { useAppToast } from '@/composables/useToast'
+import { VueTelInput } from 'vue-tel-input'
+import 'vue-tel-input/vue-tel-input.css'
+import tutoSpamImg from '@/assets/img/tuto_spam.png'
 import {
   ArrowRight,
   Users,
@@ -14,115 +18,33 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  ChevronDown,
-  Search,
+  MailSearch,
+  ShieldAlert,
+  Headset,
+  Phone,
+  ImageIcon,
 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
 const toast = useAppToast()
+const showTutoImage = ref(false)
 
 const step = ref<'register' | 'success'>('register')
 const submitting = ref(false)
 const showPwd = ref(false)
 const showConfirm = ref(false)
-const phoneError = ref('')
 
-interface Country { name: string; code: string; dial: string; flag: string }
+const phone = ref('')
+const phoneValid = ref(false)
+const phoneTouched = ref(false)
 
-const countries: Country[] = [
-  { name: "Côte d'Ivoire", code: 'CI', dial: '+225', flag: '🇨🇮' },
-  { name: 'Sénégal', code: 'SN', dial: '+221', flag: '🇸🇳' },
-  { name: 'Mali', code: 'ML', dial: '+223', flag: '🇲🇱' },
-  { name: 'Burkina Faso', code: 'BF', dial: '+226', flag: '🇧🇫' },
-  { name: 'Guinée', code: 'GN', dial: '+224', flag: '🇬🇳' },
-  { name: 'Ghana', code: 'GH', dial: '+233', flag: '🇬🇭' },
-  { name: 'Togo', code: 'TG', dial: '+228', flag: '🇹🇬' },
-  { name: 'Bénin', code: 'BJ', dial: '+229', flag: '🇧🇯' },
-  { name: 'Niger', code: 'NE', dial: '+227', flag: '🇳🇪' },
-  { name: 'Nigeria', code: 'NG', dial: '+234', flag: '🇳🇬' },
-  { name: 'Cameroun', code: 'CM', dial: '+237', flag: '🇨🇲' },
-  { name: 'Gabon', code: 'GA', dial: '+241', flag: '🇬🇦' },
-  { name: 'Congo', code: 'CG', dial: '+242', flag: '🇨🇬' },
-  { name: 'RD Congo', code: 'CD', dial: '+243', flag: '🇨🇩' },
-  { name: 'Maroc', code: 'MA', dial: '+212', flag: '🇲🇦' },
-  { name: 'Tunisie', code: 'TN', dial: '+216', flag: '🇹🇳' },
-  { name: 'Algérie', code: 'DZ', dial: '+213', flag: '🇩🇿' },
-  { name: 'France', code: 'FR', dial: '+33', flag: '🇫🇷' },
-  { name: 'Belgique', code: 'BE', dial: '+32', flag: '🇧🇪' },
-  { name: 'Suisse', code: 'CH', dial: '+41', flag: '🇨🇭' },
-  { name: 'Canada', code: 'CA', dial: '+1', flag: '🇨🇦' },
-  { name: 'Allemagne', code: 'DE', dial: '+49', flag: '🇩🇪' },
-  { name: 'États-Unis', code: 'US', dial: '+1', flag: '🇺🇸' },
-]
-
-const selectedCountry = ref<Country>(countries[0]!)
-const phoneDropdownOpen = ref(false)
-const phoneSearch = ref('')
-const phoneDropdownRef = ref<HTMLElement | null>(null)
-const phoneSearchRef = ref<HTMLInputElement | null>(null)
-
-const filteredCountries = computed(() => {
-  const q = phoneSearch.value.toLowerCase()
-  if (!q) return countries
-  return countries.filter(c =>
-    c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q)
-  )
-})
-
-function selectCountry(c: Country) {
-  selectedCountry.value = c
-  phoneDropdownOpen.value = false
-  phoneSearch.value = ''
+function onPhoneValidate(validation: any) {
+  phoneValid.value = !!validation.valid
 }
-
-function togglePhoneDropdown() {
-  phoneDropdownOpen.value = !phoneDropdownOpen.value
-  if (phoneDropdownOpen.value) {
-    setTimeout(() => phoneSearchRef.value?.focus(), 50)
-  }
-}
-
-function onClickOutside(e: MouseEvent) {
-  if (phoneDropdownRef.value && !phoneDropdownRef.value.contains(e.target as Node)) {
-    phoneDropdownOpen.value = false
-    phoneSearch.value = ''
-  }
-}
-
-onMounted(() => document.addEventListener('click', onClickOutside))
-onUnmounted(() => document.removeEventListener('click', onClickOutside))
-
-const phoneNumber = ref('')
-
-function validatePhone(): boolean {
-  const num = phoneNumber.value.trim()
-  if (!num) {
-    phoneError.value = ''
-    return true
-  }
-  if (!/^[0-9]{6,15}$/.test(num.replace(/[\s\-]/g, ''))) {
-    phoneError.value = 'Numéro invalide. Saisissez uniquement les chiffres sans l\'indicatif.'
-    return false
-  }
-  phoneError.value = ''
-  return true
-}
-
-function onPhoneInput(e: Event) {
-  const input = e.target as HTMLInputElement
-  phoneNumber.value = input.value.replace(/[^\d\s\-]/g, '')
-  validatePhone()
-}
-
-const fullPhone = computed(() => {
-  const num = phoneNumber.value.replace(/[\s\-]/g, '')
-  if (!num) return ''
-  return `${selectedCountry.value.dial}${num}`
-})
 
 const cguAccepted = ref(false)
 
-/* ── Registration form ── */
 const registerForm = ref({
   first_name: '',
   last_name: '',
@@ -141,8 +63,9 @@ const benefits = [
 ]
 
 async function handleRegister() {
-  if (phoneNumber.value && !validatePhone()) {
-    toast.error('Erreur', phoneError.value)
+  phoneTouched.value = true
+  if (!phone.value || !phoneValid.value) {
+    toast.error('Erreur', !phone.value ? 'Le numéro de téléphone est obligatoire.' : 'Numéro de téléphone invalide.')
     return
   }
   if (registerForm.value.password !== registerForm.value.password_confirm) {
@@ -155,7 +78,7 @@ async function handleRegister() {
       first_name: registerForm.value.first_name,
       last_name: registerForm.value.last_name,
       email: registerForm.value.email,
-      phone: fullPhone.value || undefined,
+      phone: phone.value,
       sex: registerForm.value.sex as 'M' | 'F',
       date_of_birth: registerForm.value.date_of_birth,
       password: registerForm.value.password,
@@ -308,78 +231,22 @@ async function downloadPdf(type: 'registration' | 'membership') {
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Téléphone</label>
-                  <div ref="phoneDropdownRef" class="relative">
-                    <div
-                      class="flex border rounded-lg overflow-hidden transition"
-                      :class="phoneError ? 'border-red-400 ring-1 ring-red-300' : 'border-[var(--color-border)] focus-within:ring-2 focus-within:ring-[var(--color-accent)] focus-within:border-[var(--color-accent)]'"
-                    >
-                      <button
-                        type="button"
-                        @click.stop="togglePhoneDropdown"
-                        class="flex items-center gap-1 px-3 py-3 bg-[var(--color-surface)] border-r border-[var(--color-border)] hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
-                      >
-                        <span class="text-base leading-none">{{ selectedCountry.flag }}</span>
-                        <span class="text-xs font-semibold text-[var(--color-primary)] whitespace-nowrap">{{ selectedCountry.dial }}</span>
-                        <ChevronDown :size="14" class="text-[var(--color-muted)] transition-transform" :class="{ 'rotate-180': phoneDropdownOpen }" />
-                      </button>
-                      <input
-                        :value="phoneNumber"
-                        @input="onPhoneInput"
-                        type="tel"
-                        inputmode="tel"
-                        placeholder="07 01 02 03 04"
-                        class="flex-1 min-w-0 px-3 py-3 text-sm focus:outline-none bg-transparent"
-                      >
-                    </div>
-
-                    <Transition
-                      enter-active-class="transition duration-150 ease-out"
-                      enter-from-class="opacity-0 -translate-y-1 scale-95"
-                      enter-to-class="opacity-100 translate-y-0 scale-100"
-                      leave-active-class="transition duration-100 ease-in"
-                      leave-from-class="opacity-100 translate-y-0 scale-100"
-                      leave-to-class="opacity-0 -translate-y-1 scale-95"
-                    >
-                      <div
-                        v-if="phoneDropdownOpen"
-                        class="absolute z-50 left-0 right-0 mt-1 bg-white border border-[var(--color-border)] rounded-lg shadow-lg overflow-hidden"
-                      >
-                        <div class="p-2 border-b border-[var(--color-border)]">
-                          <div class="relative">
-                            <Search :size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-                            <input
-                              ref="phoneSearchRef"
-                              v-model="phoneSearch"
-                              type="text"
-                              placeholder="Rechercher un pays…"
-                              class="w-full pl-8 pr-3 py-2 text-xs border border-[var(--color-border)] rounded-md focus:outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-                            >
-                          </div>
-                        </div>
-                        <ul class="max-h-48 overflow-y-auto">
-                          <li
-                            v-for="c in filteredCountries"
-                            :key="c.code"
-                            @click="selectCountry(c)"
-                            class="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer transition-colors"
-                            :class="c.code === selectedCountry.code ? 'bg-[var(--color-accent-light)] text-[var(--color-accent)] font-semibold' : 'hover:bg-[var(--color-surface)]'"
-                          >
-                            <span class="text-base leading-none">{{ c.flag }}</span>
-                            <span class="flex-1 truncate">{{ c.name }}</span>
-                            <span class="text-xs text-[var(--color-muted)] font-mono">{{ c.dial }}</span>
-                          </li>
-                          <li v-if="filteredCountries.length === 0" class="px-3 py-3 text-xs text-center text-[var(--color-muted)]">
-                            Aucun résultat
-                          </li>
-                        </ul>
-                      </div>
-                    </Transition>
-                  </div>
-                  <p v-if="phoneError" class="mt-1 text-xs text-red-500">{{ phoneError }}</p>
+                <div class="sm:col-span-2 md:col-span-1">
+                  <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Téléphone *</label>
+                  <vue-tel-input
+                    v-model="phone"
+                    mode="international"
+                    default-country="CI"
+                    :dropdown-options="{ showDialCodeInSelection: true, showFlags: true, showSearchBox: true }"
+                    :input-options="{ placeholder: '07 01 02 03 04', styleClasses: 'text-sm' }"
+                    :class="['vue-tel-input--custom', { 'vue-tel-input--error': phoneTouched && (!phone || !phoneValid) }]"
+                    @validate="onPhoneValidate"
+                    @blur="phoneTouched = true"
+                  />
+                  <p v-if="phoneTouched && !phone" class="mt-1 text-xs text-red-500">Le numéro de téléphone est obligatoire.</p>
+                  <p v-else-if="phoneTouched && phone && !phoneValid" class="mt-1 text-xs text-red-500">Numéro de téléphone invalide.</p>
                 </div>
-                <div>
+                <div class="sm:col-span-2 md:col-span-1">
                   <label class="block font-heading text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-muted)] mb-1.5">Sexe *</label>
                   <select v-model="registerForm.sex" required class="w-full px-4 py-3 border border-[var(--color-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] transition bg-white">
                     <option value="" disabled>Choisir</option>
@@ -449,7 +316,9 @@ async function downloadPdf(type: 'registration' | 'membership') {
         </div>
 
         <!-- ── STEP: SUCCESS (post-registration) ── -->
-        <div v-else-if="step === 'success'">
+        <div v-else-if="step === 'success'" class="max-w-2xl mx-auto space-y-6">
+
+          <!-- Confirmation -->
           <div class="bg-white border border-[var(--color-border)] rounded-xl p-8 md:p-10 text-center">
             <div class="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-5">
               <CheckCircle2 :size="32" class="text-emerald-500" />
@@ -457,21 +326,109 @@ async function downloadPdf(type: 'registration' | 'membership') {
             <h2 class="font-heading text-2xl font-extrabold text-[var(--color-primary)] mb-3">
               Inscription réussie !
             </h2>
-            <p class="text-[var(--color-muted)] max-w-md mx-auto mb-4">
-              Un email de vérification a été envoyé à votre adresse. Cliquez sur le lien qu'il contient pour activer votre compte, puis connectez-vous pour compléter votre adhésion.
+            <p class="text-[var(--color-muted)] max-w-lg mx-auto mb-6">
+              Un email de vérification a été envoyé à votre adresse. <strong class="text-[var(--color-primary)]">Ouvrez votre boîte mail</strong> et cliquez sur le lien qu'il contient pour activer votre compte.
             </p>
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 max-w-md mx-auto mb-6">
-              <p class="text-xs text-amber-800 leading-relaxed">
-                <strong>Vous ne trouvez pas l'email ?</strong> Pensez à vérifier votre dossier <strong>Spam</strong> ou <strong>Courrier indésirable</strong>. L'email provient de <em>FPP - Front Patriotique Panafricain</em>.
-              </p>
-            </div>
             <RouterLink
               to="/login"
-              class="inline-flex items-center gap-2 px-6 py-3 font-heading text-sm font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-sm transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer"
+              class="inline-flex items-center gap-2 px-6 py-3 font-heading text-sm font-bold uppercase tracking-[0.04em] bg-[var(--color-accent)] text-white no-underline rounded-lg transition-all hover:bg-[var(--color-accent-hover)] cursor-pointer"
             >
-              Se connecter
+              J'ai confirmé, me connecter
               <ArrowRight :size="16" />
             </RouterLink>
+          </div>
+
+          <!-- Guide spam -->
+          <div class="bg-amber-50 border border-amber-300 rounded-xl p-6 md:p-8">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                <ShieldAlert :size="20" class="text-amber-600" />
+              </div>
+              <h3 class="font-heading text-base font-bold text-amber-900">
+                Vous ne trouvez pas l'email ?
+              </h3>
+            </div>
+
+            <p class="text-sm text-amber-800 leading-relaxed mb-5">
+              Il arrive souvent que l'email arrive dans le dossier <strong>« Spam »</strong> ou <strong>« Courrier indésirable »</strong> de votre boîte mail. C'est normal, voici comment le retrouver :
+            </p>
+
+            <div class="space-y-3 mb-5">
+              <div class="flex items-start gap-3">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-200 text-amber-800 font-heading text-xs font-bold shrink-0 mt-0.5">1</span>
+                <p class="text-sm text-amber-800">Ouvrez votre application mail (Gmail, Yahoo, Outlook...)</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-200 text-amber-800 font-heading text-xs font-bold shrink-0 mt-0.5">2</span>
+                <p class="text-sm text-amber-800">Dans le menu à gauche, cherchez <strong>« Spam »</strong>, <strong>« Courrier indésirable »</strong> ou <strong>« Junk »</strong>. Sur Gmail, cliquez d'abord sur <strong>« Plus »</strong> pour le voir.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-200 text-amber-800 font-heading text-xs font-bold shrink-0 mt-0.5">3</span>
+                <p class="text-sm text-amber-800">Cherchez un email de <strong>« FPP - Front Patriotique Panafricain »</strong> et ouvrez-le</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-amber-200 text-amber-800 font-heading text-xs font-bold shrink-0 mt-0.5">4</span>
+                <p class="text-sm text-amber-800">Cliquez sur le bouton <strong>« Confirmer mon adresse email »</strong> dans le message</p>
+              </div>
+            </div>
+
+            <!-- Tuto image -->
+            <div class="bg-white rounded-lg border border-amber-200 overflow-hidden">
+              <button
+                type="button"
+                @click="showTutoImage = !showTutoImage"
+                class="w-full flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-amber-50/50 transition-colors"
+              >
+                <span class="flex items-center gap-2 text-sm font-semibold text-amber-800">
+                  <ImageIcon :size="16" />
+                  Voir comment trouver le dossier Spam sur Gmail
+                </span>
+                <ArrowRight :size="16" class="text-amber-600 transition-transform" :class="{ 'rotate-90': showTutoImage }" />
+              </button>
+              <div v-if="showTutoImage" class="px-4 pb-4">
+                <img
+                  :src="tutoSpamImg"
+                  alt="Tutoriel : comment trouver le dossier Spam dans Gmail"
+                  class="w-full max-w-md mx-auto rounded-lg border border-amber-200"
+                />
+                <p class="text-xs text-amber-700 text-center mt-2">
+                  Sur Gmail : cliquez sur <strong>« Plus »</strong> (1), puis sur <strong>« Spam »</strong> (2)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact secrétariat -->
+          <div v-if="settingsStore.settings?.whatsapp_number" class="bg-white border border-[var(--color-border)] rounded-xl p-6 md:p-8">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-lg bg-[var(--color-accent-light)] flex items-center justify-center shrink-0">
+                <Headset :size="20" class="text-[var(--color-accent)]" />
+              </div>
+              <div class="flex-1">
+                <h3 class="font-heading text-sm font-bold text-[var(--color-primary)] mb-1">Besoin d'aide ? Appelez le secrétariat</h3>
+                <p class="text-xs text-[var(--color-muted)] leading-relaxed mb-3">
+                  Notre secrétariat est disponible <strong>24h/24, 7j/7</strong> pour vous accompagner dans votre inscription.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <a
+                    :href="`tel:${settingsStore.settings.whatsapp_number}`"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--color-accent)] text-white text-sm font-semibold rounded-lg no-underline hover:bg-[var(--color-accent-hover)] transition-colors"
+                  >
+                    <Phone :size="16" />
+                    Appeler : {{ settingsStore.settings.whatsapp_number }}
+                  </a>
+                  <a
+                    :href="`https://wa.me/${settingsStore.settings.whatsapp_number.replace(/[^0-9+]/g, '')}`"
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-[var(--color-accent)] text-[var(--color-accent)] text-sm font-semibold rounded-lg no-underline hover:bg-[var(--color-accent)] hover:text-white transition-all"
+                  >
+                    <MailSearch :size="16" />
+                    Écrire sur WhatsApp
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

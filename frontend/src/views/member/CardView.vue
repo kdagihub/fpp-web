@@ -22,6 +22,23 @@ const cardRef = ref<HTMLElement | null>(null)
 const flipped = ref(false)
 const exporting = ref(false)
 
+const memberPhoto = computed(() => {
+  if (membership.value?.photo) return getMediaUrl(membership.value.photo)
+  if (user.value?.avatar) return getMediaUrl(user.value.avatar)
+  return null
+})
+
+const sexLabel = computed(() => user.value?.sex === 'F' ? 'F' : 'M')
+
+const affiliationLabel = computed(() =>
+  user.value?.sex === 'F' ? 'MILITANTE' : 'MILITANT'
+)
+
+const formattedDob = computed(() => {
+  if (!user.value?.date_of_birth) return '—'
+  return dayjs(user.value.date_of_birth).format('DD/MM/YYYY')
+})
+
 onMounted(async () => {
   if (membership.value?.status !== 'validated') {
     router.replace('/mon-espace')
@@ -101,7 +118,7 @@ async function exportPdf() {
 
     <!-- Card container with perspective -->
     <div class="flex justify-center">
-      <div class="w-full max-w-[430px]" style="perspective: 1200px;">
+      <div class="w-full max-w-[560px]" style="perspective: 1200px;">
         <div
           class="relative w-full transition-transform duration-700 ease-in-out"
           :style="{ transformStyle: 'preserve-3d', transform: flipped ? 'rotateY(180deg)' : '' }"
@@ -110,106 +127,143 @@ async function exportPdf() {
           <!-- ═══ RECTO ═══ -->
           <div
             ref="cardRef"
-            class="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl"
+            class="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border border-gray-200"
             style="backface-visibility: hidden;"
           >
-            <div class="relative w-full h-full bg-gradient-to-br from-[#0a0a0a] via-[#1a1a1a] to-[#0d0d0d] p-5 flex flex-col justify-between">
-              <!-- Holographic overlay -->
-              <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_30%,rgba(0,166,81,0.12),transparent_50%)]" />
-              <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_70%,rgba(255,255,255,0.04),transparent_50%)]" />
-              <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-green-500 via-green-400 to-green-600" />
+            <div class="relative w-full h-full bg-white flex flex-col">
 
-              <!-- Top row: Logo + Title -->
-              <div class="relative flex items-center justify-between">
-                <div class="flex items-center gap-2.5">
-                  <img :src="logoFpp" alt="FPP" class="h-8 w-auto opacity-90">
-                  <div>
-                    <div class="text-[11px] font-bold text-white tracking-[0.15em] uppercase leading-none">FPP</div>
-                    <div class="text-[6px] text-green-400 tracking-[0.08em] uppercase mt-0.5 leading-none">Front Patriotique Panafricain</div>
+              <!-- Top bar -->
+              <div class="bg-[#111] px-3 py-[6px] sm:py-2 flex items-center justify-center shrink-0">
+                <span class="text-white text-[9px] sm:text-[12px] font-extrabold tracking-[0.3em] sm:tracking-[0.35em] uppercase">
+                  Front Patriotique Panafricain
+                </span>
+              </div>
+
+              <!-- Body -->
+              <div class="flex-1 flex min-h-0 relative overflow-hidden">
+
+                <!-- FPP watermark -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+                  <span class="text-[60px] sm:text-[80px] font-extrabold text-gray-100 tracking-wide leading-none">FPP</span>
+                </div>
+
+                <!-- Photo -->
+                <div class="w-[36%] shrink-0 p-2 sm:p-2.5 flex items-stretch relative z-10">
+                  <div class="w-full bg-sky-100 border border-gray-300 overflow-hidden">
+                    <img
+                      v-if="memberPhoto"
+                      :src="memberPhoto"
+                      class="w-full h-full object-cover"
+                      alt="Photo membre"
+                      crossorigin="anonymous"
+                    >
+                    <div v-else class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-lg font-bold">
+                      {{ user?.first_name?.charAt(0) }}{{ user?.last_name?.charAt(0) }}
+                    </div>
                   </div>
                 </div>
-                <div class="text-right">
-                  <div class="text-[7px] text-gray-500 uppercase tracking-wider">Carte de membre</div>
-                  <div class="text-[7px] text-gray-500 uppercase tracking-wider">Côte d'Ivoire</div>
+
+                <!-- Info fields -->
+                <div class="flex-1 py-1.5 sm:py-2 pr-2 sm:pr-3 relative z-10 min-w-0">
+                  <div class="space-y-[2px] sm:space-y-1">
+
+                    <!-- Nom + Sexe -->
+                    <div class="flex items-start gap-1">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Nom :</p>
+                        <p class="text-[9px] sm:text-[13px] font-extrabold text-[#111] uppercase leading-tight truncate">{{ user?.last_name }}</p>
+                      </div>
+                      <div class="text-right shrink-0">
+                        <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Sexe :</p>
+                        <p class="text-[9px] sm:text-[13px] font-extrabold text-[#111] leading-tight">{{ sexLabel }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Prénom(s) -->
+                    <div>
+                      <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Prénom(s) :</p>
+                      <p class="text-[9px] sm:text-[12px] font-bold text-[#111] uppercase leading-tight truncate">{{ user?.first_name }}</p>
+                    </div>
+
+                    <!-- Date de naissance -->
+                    <div>
+                      <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Date de naissance :</p>
+                      <p class="text-[8px] sm:text-[11px] font-bold text-[#111] leading-tight">{{ formattedDob }}</p>
+                    </div>
+
+                    <!-- Lieu de naissance -->
+                    <div>
+                      <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Lieu de naissance :</p>
+                      <p class="text-[8px] sm:text-[11px] font-bold text-[#111] uppercase leading-tight truncate">{{ membership?.commune || '—' }}</p>
+                    </div>
+
+                    <!-- Lieu de résidence -->
+                    <div>
+                      <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Lieu de résidence :</p>
+                      <p class="text-[8px] sm:text-[11px] font-bold text-[#111] uppercase leading-tight truncate">{{ membership?.city || '—' }}</p>
+                    </div>
+
+                    <!-- Fonction -->
+                    <div>
+                      <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Fonction :</p>
+                      <p class="text-[8px] sm:text-[11px] font-bold text-[#111] uppercase leading-tight truncate">{{ membership?.profession || '—' }}</p>
+                    </div>
+
+                    <!-- Affiliation -->
+                    <div>
+                      <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Affiliation :</p>
+                      <p class="text-[8px] sm:text-[11px] font-extrabold text-[#111] uppercase leading-tight">{{ affiliationLabel }}</p>
+                    </div>
+
+                    <!-- Matricule + QR -->
+                    <div class="flex items-end justify-between gap-1 pt-1 sm:pt-2">
+                      <div class="min-w-0">
+                        <p class="text-[6px] sm:text-[8px] text-gray-400 italic leading-none">Matricule :</p>
+                        <p class="text-[8px] sm:text-[11px] font-mono font-bold text-[#111] leading-tight truncate">{{ membership?.matricule || '—' }}</p>
+                      </div>
+                      <div v-if="qrDataUrl" class="shrink-0 flex flex-col items-center">
+                        <p class="text-[5px] sm:text-[6px] text-gray-300 italic leading-none mb-0.5">Front Patriotique Panafricain</p>
+                        <img :src="qrDataUrl" class="w-10 h-10 sm:w-13 sm:h-13" alt="QR Code">
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Middle: Photo + Info -->
-              <div class="relative flex items-end gap-4">
-                <div class="w-16 h-20 rounded-lg bg-gray-800 border border-gray-700 overflow-hidden shrink-0 shadow-inner">
-                  <img
-                    v-if="user?.avatar"
-                    :src="getMediaUrl(user.avatar)"
-                    class="w-full h-full object-cover"
-                    alt=""
-                  >
-                  <div v-else class="w-full h-full flex items-center justify-center text-gray-600 text-lg font-bold">
-                    {{ user?.first_name?.charAt(0) }}{{ user?.last_name?.charAt(0) }}
-                  </div>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-white text-sm font-bold truncate leading-tight">
-                    {{ user?.last_name?.toUpperCase() }}
-                  </p>
-                  <p class="text-gray-300 text-xs font-medium truncate leading-tight">
-                    {{ user?.first_name }}
-                  </p>
-                  <p class="text-green-400 text-[11px] font-mono tracking-widest mt-1.5">
-                    {{ membership?.matricule || '—' }}
-                  </p>
-                </div>
-              </div>
-
-              <!-- Bottom row: Meta -->
-              <div class="relative flex items-end justify-between">
-                <div class="flex gap-5">
-                  <div>
-                    <p class="text-[7px] text-gray-500 uppercase tracking-wider">Membre depuis</p>
-                    <p class="text-[10px] text-gray-300 font-medium">
-                      {{ dayjs(membership?.membership_validated_at).format('DD/MM/YYYY') }}
-                    </p>
-                  </div>
-                  <div>
-                    <p class="text-[7px] text-gray-500 uppercase tracking-wider">Ville</p>
-                    <p class="text-[10px] text-gray-300 font-medium">{{ membership?.city }}</p>
-                  </div>
-                </div>
-                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600 opacity-80" />
+              <!-- Bottom bar -->
+              <div class="bg-[#111] px-3 py-[6px] sm:py-2 flex items-center justify-center shrink-0">
+                <span class="text-white text-[9px] sm:text-[13px] font-extrabold tracking-[0.25em] sm:tracking-[0.3em] uppercase">
+                  Unité – Dignité – Intégrité
+                </span>
               </div>
             </div>
           </div>
 
           <!-- ═══ VERSO ═══ -->
           <div
-            class="absolute inset-0 rounded-2xl overflow-hidden shadow-2xl"
+            class="absolute inset-0 rounded-xl overflow-hidden shadow-2xl border border-gray-200"
             style="backface-visibility: hidden; transform: rotateY(180deg);"
           >
-            <div class="relative w-full h-full bg-gradient-to-br from-gray-50 to-white p-5 flex flex-col justify-between">
-              <!-- Top -->
-              <div class="flex items-center justify-between">
+            <div class="relative w-full h-full bg-white flex flex-col items-center justify-between py-4 sm:py-5 px-5 sm:px-8">
+
+              <!-- Slogan top -->
+              <p class="text-[11px] sm:text-[15px] font-extrabold text-[#111] text-center uppercase leading-snug tracking-wide">
+                Un peuple debout est un peuple<br>qui gagne toujours.
+              </p>
+
+              <!-- Logo center -->
+              <div class="flex items-center gap-3 sm:gap-4">
+                <img :src="logoFpp" alt="FPP" class="h-14 sm:h-20 w-auto">
                 <div>
-                  <p class="text-[8px] text-gray-400 uppercase tracking-wider font-semibold">Front Patriotique Panafricain</p>
-                  <p class="text-[7px] text-gray-400 mt-0.5">Parti politique — Côte d'Ivoire</p>
-                </div>
-                <img :src="logoFpp" alt="FPP" class="h-6 w-auto opacity-30">
-              </div>
-
-              <!-- QR Code center -->
-              <div class="flex items-center justify-center">
-                <div class="bg-white rounded-lg p-1.5 shadow-sm border border-gray-100">
-                  <img v-if="qrDataUrl" :src="qrDataUrl" class="w-20 h-20" alt="QR Code">
+                  <p class="text-2xl sm:text-4xl font-black text-[#111] leading-none tracking-tight">FPP</p>
+                  <p class="text-[7px] sm:text-[10px] text-gray-600 font-medium mt-0.5">Front Patriotique Panafricain</p>
                 </div>
               </div>
 
-              <!-- Bottom info -->
-              <div class="text-center space-y-1">
-                <p class="text-[8px] text-gray-500">
-                  Cette carte est personnelle et incessible.
-                </p>
-                <p class="text-[7px] text-gray-400">
-                  En cas de perte, contactez info@fpp-ci.online
-                </p>
-              </div>
+              <!-- Slogan bottom -->
+              <p class="text-[13px] sm:text-[18px] font-black text-[#111] text-center uppercase tracking-wide">
+                Allons où on va !
+              </p>
             </div>
           </div>
         </div>
@@ -218,7 +272,7 @@ async function exportPdf() {
 
     <!-- Instructions -->
     <p class="mt-6 text-center text-[11px] text-gray-400 leading-relaxed px-4">
-      Cliquez « Retourner » pour le verso (QR code).<br class="sm:hidden">
+      Cliquez « Retourner » pour voir le verso.<br class="sm:hidden">
       Le PDF est au format carte de crédit (85,6 × 54 mm).
     </p>
   </div>

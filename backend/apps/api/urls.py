@@ -26,6 +26,9 @@ from apps.api.views.content import (
     AdminArticleListView,
     AdminCategoryDetailView,
     AdminCategoryListCreateView,
+    AdminDocumentDetailView,
+    AdminDocumentListCreateView,
+    AdminDocumentPreviewView,
     AdminEventDetailView,
     AdminEventListCreateView,
     AdminMediaContentDetailView,
@@ -37,6 +40,9 @@ from apps.api.views.content import (
     PublicArticleDetailView,
     PublicArticleListView,
     PublicCategoryListView,
+    PublicDocumentDownloadView,
+    PublicDocumentListView,
+    PublicDocumentPreviewView,
     PublicEventDetailView,
     PublicEventListView,
     PublicMediaContentListView,
@@ -112,6 +118,9 @@ public_urlpatterns = [
     path("registration-form/pdf/", PublicRegistrationFormPdfView.as_view(), name="public-registration-pdf"),
     path("membership-form/pdf/", PublicMembershipFormPdfView.as_view(), name="public-membership-pdf"),
     path("bureau/", PublicBureauListView.as_view(), name="public-bureau"),
+    path("documents/", PublicDocumentListView.as_view(), name="public-documents"),
+    path("documents/<uuid:pk>/download/", PublicDocumentDownloadView.as_view(), name="public-document-download"),
+    path("documents/<uuid:pk>/preview/", PublicDocumentPreviewView.as_view(), name="public-document-preview"),
 ]
 
 # ---------------------------------------------------------------------------
@@ -167,6 +176,11 @@ admin_urlpatterns = [
     # Bureau National
     path("bureau/", AdminBureauListCreateView.as_view(), name="admin-bureau-list"),
     path("bureau/<uuid:pk>/", AdminBureauDetailView.as_view(), name="admin-bureau-detail"),
+
+    # Documents
+    path("documents/", AdminDocumentListCreateView.as_view(), name="admin-documents"),
+    path("documents/<uuid:pk>/", AdminDocumentDetailView.as_view(), name="admin-document-detail"),
+    path("documents/<uuid:pk>/preview/", AdminDocumentPreviewView.as_view(), name="admin-document-preview"),
 
     # Audit log
     path("audit-log/", AdminAuditLogView.as_view(), name="admin-audit-log"),

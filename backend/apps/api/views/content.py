@@ -1,5 +1,9 @@
+import mimetypes
+
 from django.db.models import Count, Q
+from django.http import FileResponse
 from django.utils import timezone
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -14,6 +18,7 @@ from apps.api.permissions import (
     CanDeleteArticle,
     CanEditArticle,
     CanManageCategories,
+    CanManageDocuments,
     CanManageEvents,
     CanManageMedia,
     CanManageProgram,
@@ -23,6 +28,7 @@ from apps.api.serializers.content import (
     AdminArticleDetailSerializer,
     AdminArticleListSerializer,
     AdminCategorySerializer,
+    AdminDocumentSerializer,
     AdminEventDetailSerializer,
     AdminEventListSerializer,
     AdminMediaContentSerializer,
@@ -31,13 +37,14 @@ from apps.api.serializers.content import (
     PublicArticleDetailSerializer,
     PublicArticleListSerializer,
     PublicCategorySerializer,
+    PublicDocumentSerializer,
     PublicEventDetailSerializer,
     PublicEventListSerializer,
     PublicMediaContentSerializer,
     PublicProgramSectionDetailSerializer,
     PublicProgramSectionListSerializer,
 )
-from apps.content.models import Article, Category, Event, MediaContent, ProgramItem, ProgramSection
+from apps.content.models import Article, Category, Document, Event, MediaContent, ProgramItem, ProgramSection
 from apps.core.mixins import AuditMixin
 from apps.core.models import AuditLog
 
@@ -808,3 +815,209 @@ class AdminEventDetailView(APIView):
 
         event.delete()
         return Response({"detail": "Événement supprimé."}, status=status.HTTP_200_OK)
+
+
+# ===========================================================================
+# Documents — Public
+# ===========================================================================
+
+class PublicDocumentListView(ListAPIView):
+    """Documents publics téléchargeables."""
+
+    permission_classes = [AllowAny]
+    serializer_class = PublicDocumentSerializer
+    pagination_class = SmallPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["title", "description"]
+    ordering_fields = ["created_at", "download_count"]
+    ordering = ["-created_at"]
+
+    def get_queryset(self):
+        qs = Document.objects.filter(is_public=True).select_related("uploaded_by")
+        category = self.request.query_params.get("category")
+        if category:
+            qs = qs.filter(category=category)
+        return qs
+
+
+class PublicDocumentDownloadView(APIView):
+    """Incrémente le compteur de téléchargement d'un document public."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request, pk):
+        try:
+            doc = Document.objects.get(pk=pk, is_public=True)
+        except Document.DoesNotExist:
+            return Response({"detail": "Document introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        doc.download_count += 1
+        doc.save(update_fields=["download_count"])
+        return Response({"download_count": doc.download_count})
+
+
+class PublicDocumentPreviewView(APIView):
+    """Sert le fichier en ligne pour l'aperçu (iframe/object embedding).
+
+    Exempt de X-Frame-Options pour permettre l'embedding cross-origin.
+    """
+
+    permission_classes = [AllowAny]
+
+    @xframe_options_exempt
+    def get(self, request, pk):
+        try:
+            doc = Document.objects.get(pk=pk, is_public=True)
+        except Document.DoesNotExist:
+            return Response(
+                {"detail": "Document introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not doc.file:
+            return Response(
+                {"detail": "Aucun fichier attaché."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        content_type, _ = mimetypes.guess_type(doc.file.name)
+        if not content_type:
+            content_type = "application/octet-stream"
+
+        response = FileResponse(
+            doc.file.open("rb"),
+            content_type=content_type,
+        )
+        response["Content-Disposition"] = "inline"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
+
+class AdminDocumentPreviewView(APIView):
+    """Sert un document (public ou privé) pour l'aperçu admin."""
+
+    permission_classes = [IsAuthenticated, CanManageDocuments]
+
+    @xframe_options_exempt
+    def get(self, request, pk):
+        try:
+            doc = Document.objects.get(pk=pk)
+        except Document.DoesNotExist:
+            return Response(
+                {"detail": "Document introuvable."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not doc.file:
+            return Response(
+                {"detail": "Aucun fichier attaché."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        content_type, _ = mimetypes.guess_type(doc.file.name)
+        if not content_type:
+            content_type = "application/octet-stream"
+
+        response = FileResponse(
+            doc.file.open("rb"),
+            content_type=content_type,
+        )
+        response["Content-Disposition"] = "inline"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
+
+# ===========================================================================
+# Documents — Admin
+# ===========================================================================
+
+class AdminDocumentListCreateView(APIView):
+    """Admin : liste et création de documents."""
+
+    permission_classes = [IsAuthenticated, CanManageDocuments]
+
+    def get(self, request):
+        qs = Document.objects.select_related("uploaded_by").all()
+        category = request.query_params.get("category")
+        if category:
+            qs = qs.filter(category=category)
+        is_public = request.query_params.get("is_public")
+        if is_public is not None:
+            qs = qs.filter(is_public=is_public.lower() == "true")
+        search = request.query_params.get("search")
+        if search:
+            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search))
+        serializer = AdminDocumentSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AdminDocumentSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        doc = serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.CREATE,
+            entity_type="Document",
+            entity_id=doc.pk,
+            request=request,
+        )
+
+        return Response(
+            AdminDocumentSerializer(doc, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminDocumentDetailView(APIView):
+    """Admin : détail, modification et suppression d'un document."""
+
+    permission_classes = [IsAuthenticated, CanManageDocuments]
+
+    def _get_doc(self, pk):
+        try:
+            return Document.objects.select_related("uploaded_by").get(pk=pk)
+        except Document.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        doc = self._get_doc(pk)
+        if not doc:
+            return Response({"detail": "Document introuvable."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AdminDocumentSerializer(doc, context={"request": request}).data)
+
+    def patch(self, request, pk):
+        doc = self._get_doc(pk)
+        if not doc:
+            return Response({"detail": "Document introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminDocumentSerializer(doc, data=request.data, partial=True, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.UPDATE,
+            entity_type="Document",
+            entity_id=doc.pk,
+            request=request,
+        )
+
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        doc = self._get_doc(pk)
+        if not doc:
+            return Response({"detail": "Document introuvable."}, status=status.HTTP_404_NOT_FOUND)
+
+        AuditMixin.log_action(
+            user=request.user,
+            action=AuditLog.ActionChoices.DELETE,
+            entity_type="Document",
+            entity_id=doc.pk,
+            request=request,
+        )
+
+        if doc.file:
+            doc.file.delete(save=False)
+        doc.delete()
+        return Response({"detail": "Document supprimé."}, status=status.HTTP_200_OK)

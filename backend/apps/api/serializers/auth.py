@@ -125,6 +125,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         profile = getattr(obj, "member_profile", None)
         if profile is None:
             return None
+        photo_url = None
+        if profile.photo:
+            request = self.context.get("request")
+            photo_url = request.build_absolute_uri(profile.photo.url) if request else profile.photo.url
         return {
             "matricule": profile.matricule,
             "status": profile.membership_status,
@@ -135,6 +139,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "region": profile.region,
             "neighborhood": profile.neighborhood,
             "profession": profile.profession,
+            "photo": photo_url,
             "membership_validated_at": profile.membership_date.isoformat() if profile.membership_date else None,
             "membership_requested_at": profile.created_at.isoformat() if profile.created_at else None,
         }

@@ -110,8 +110,8 @@ onBeforeUnmount(() => {
             <div class="gate-text">
               <div class="gate-party">Front Patriotique Panafricain</div>
               <div class="gate-divider" />
+              <div class="gate-slogan">Unit&eacute; &bull; Dignit&eacute; &bull; Int&eacute;grit&eacute;</div>
               <div class="gate-motto">Allons o&ugrave; on va&nbsp;!</div>
-              <div class="gate-slogan">Souverainet&eacute; &bull; Unit&eacute; &bull; Dignit&eacute;</div>
             </div>
 
             <!-- CTA -->

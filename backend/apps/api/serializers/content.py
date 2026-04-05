@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 from rest_framework import serializers
 
-from apps.content.models import Article, Category, Event, MediaContent, ProgramItem, ProgramSection
+from apps.content.models import Article, Category, Document, Event, MediaContent, ProgramItem, ProgramSection
 from apps.api.serializers.membership import validate_image_file
 
 
@@ -410,3 +410,62 @@ class AdminEventDetailSerializer(serializers.ModelSerializer):
             validated_data["published_at"] = timezone.now()
 
         return super().create(validated_data)
+
+
+# ===========================================================================
+# Documents
+# ===========================================================================
+
+class PublicDocumentSerializer(serializers.ModelSerializer):
+    uploaded_by_name = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Document
+        fields = [
+            "id", "title", "description", "category", "file_url",
+            "file_size", "download_count", "uploaded_by_name", "created_at",
+        ]
+
+    def get_uploaded_by_name(self, obj):
+        return obj.uploaded_by.full_name if obj.uploaded_by else ""
+
+    def get_file_url(self, obj):
+        request = self.context.get("request")
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return ""
+
+
+class AdminDocumentSerializer(serializers.ModelSerializer):
+    uploaded_by_name = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Document
+        fields = [
+            "id", "title", "description", "file", "file_url", "category",
+            "is_public", "uploaded_by", "uploaded_by_name",
+            "file_size", "download_count", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "uploaded_by", "file_size", "download_count", "created_at", "updated_at"]
+
+    def get_uploaded_by_name(self, obj):
+        return obj.uploaded_by.full_name if obj.uploaded_by else ""
+
+    def get_file_url(self, obj):
+        request = self.context.get("request")
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return ""
+
+    def create(self, validated_data):
+        validated_data["uploaded_by"] = self.context["request"].user
+        instance = super().create(validated_data)
+        if instance.file:
+            try:
+                instance.file_size = instance.file.size
+                instance.save(update_fields=["file_size"])
+            except Exception:
+                pass
+        return instance

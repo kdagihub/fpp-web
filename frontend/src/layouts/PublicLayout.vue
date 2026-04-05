@@ -15,6 +15,7 @@ import {
   Twitter,
   Instagram,
   Youtube,
+  ChevronDown,
 } from 'lucide-vue-next'
 import logoFpp from '@/assets/img/fpplogsf.png'
 
@@ -22,10 +23,11 @@ const settingsStore = useSettingsStore()
 const authStore = useAuthStore()
 const route = useRoute()
 const mobileMenuOpen = ref(false)
+const partiDropdownOpen = ref(false)
+let dropdownTimeout: ReturnType<typeof setTimeout> | null = null
 
 const navLinks = [
   { to: '/', label: 'Accueil', name: 'home' },
-  { to: '/a-propos', label: 'Le Parti', name: 'about' },
   { to: '/programme', label: 'Programme', name: 'programme' },
   { to: '/actualites', label: 'Actualités', name: 'news' },
   { to: '/agenda', label: 'Agenda', name: 'agenda' },
@@ -33,8 +35,26 @@ const navLinks = [
   { to: '/contact', label: 'Contact', name: 'contact' },
 ]
 
+const partiSubLinks = [
+  { to: '/a-propos', label: 'Présentation', name: 'about' },
+  { to: '/documents', label: 'Documents & Ressources', name: 'documents' },
+]
+
 function isActive(name: string): boolean {
   return route.name === name || (name === 'news' && route.name === 'news-detail')
+}
+
+function isPartiActive(): boolean {
+  return partiSubLinks.some(l => route.name === l.name)
+}
+
+function openPartiDropdown() {
+  if (dropdownTimeout) clearTimeout(dropdownTimeout)
+  partiDropdownOpen.value = true
+}
+
+function closePartiDropdown() {
+  dropdownTimeout = setTimeout(() => { partiDropdownOpen.value = false }, 150)
 }
 
 function closeMobileMenu() {
@@ -74,8 +94,52 @@ onMounted(() => {
 
         <!-- Desktop nav links (left, after logo) -->
         <div class="hidden lg:flex items-center ml-8 xl:ml-10">
+          <!-- Accueil -->
           <RouterLink
-            v-for="link in navLinks"
+            to="/"
+            class="relative px-3 xl:px-4 py-2 font-heading text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] no-underline transition-colors whitespace-nowrap"
+            :class="isActive('home') ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'"
+          >
+            Accueil
+            <span v-if="isActive('home')" class="absolute bottom-0 left-3 right-3 h-[2.5px] bg-[var(--color-accent)] rounded-full" />
+          </RouterLink>
+
+          <!-- Le Parti — dropdown -->
+          <div class="relative" @mouseenter="openPartiDropdown" @mouseleave="closePartiDropdown">
+            <button
+              class="relative px-3 xl:px-4 py-2 font-heading text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors whitespace-nowrap inline-flex items-center gap-1 cursor-pointer"
+              :class="isPartiActive() ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'"
+            >
+              Le Parti
+              <ChevronDown :size="13" class="transition-transform" :class="partiDropdownOpen ? 'rotate-180' : ''" />
+              <span v-if="isPartiActive()" class="absolute bottom-0 left-3 right-3 h-[2.5px] bg-[var(--color-accent)] rounded-full" />
+            </button>
+            <Transition
+              enter-active-class="transition-all duration-150 ease-out"
+              enter-from-class="opacity-0 -translate-y-1 scale-95"
+              enter-to-class="opacity-100 translate-y-0 scale-100"
+              leave-active-class="transition-all duration-100 ease-in"
+              leave-from-class="opacity-100 translate-y-0 scale-100"
+              leave-to-class="opacity-0 -translate-y-1 scale-95"
+            >
+              <div v-if="partiDropdownOpen" class="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-[var(--color-border)] py-2 z-50">
+                <RouterLink
+                  v-for="sub in partiSubLinks"
+                  :key="sub.name"
+                  :to="sub.to"
+                  class="block px-4 py-2.5 text-sm font-medium no-underline transition-colors"
+                  :class="isActive(sub.name) ? 'text-[var(--color-accent)] bg-[var(--color-accent-light)]' : 'text-[var(--color-primary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-accent)]'"
+                  @click="partiDropdownOpen = false"
+                >
+                  {{ sub.label }}
+                </RouterLink>
+              </div>
+            </Transition>
+          </div>
+
+          <!-- Remaining links -->
+          <RouterLink
+            v-for="link in navLinks.slice(1)"
             :key="link.name"
             :to="link.to"
             class="relative px-3 xl:px-4 py-2 font-heading text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] no-underline transition-colors whitespace-nowrap"
@@ -84,7 +148,6 @@ onMounted(() => {
                 ? 'text-[var(--color-primary)]'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
             ]"
-            @click="closeMobileMenu"
           >
             {{ link.label }}
             <span
@@ -146,8 +209,40 @@ onMounted(() => {
           v-if="mobileMenuOpen"
           class="lg:hidden bg-white border-b border-[var(--color-border)] px-6 pb-5"
         >
+          <!-- Accueil -->
           <RouterLink
-            v-for="link in navLinks"
+            to="/"
+            class="block py-3 font-heading text-sm font-bold uppercase tracking-[0.04em] no-underline border-b border-[var(--color-border)]"
+            :class="isActive('home') ? 'text-[var(--color-primary)]' : 'text-[var(--color-muted)]'"
+            @click="closeMobileMenu"
+          >
+            <span class="flex items-center justify-between">
+              Accueil
+              <span v-if="isActive('home')" class="w-2 h-2 rounded-full bg-[var(--color-accent)]" />
+            </span>
+          </RouterLink>
+          <!-- Le Parti section -->
+          <div class="border-b border-[var(--color-border)]">
+            <div class="py-3 font-heading text-sm font-bold uppercase tracking-[0.04em] text-[var(--color-muted)]" :class="{ 'text-[var(--color-primary)]': isPartiActive() }">
+              Le Parti
+            </div>
+            <RouterLink
+              v-for="sub in partiSubLinks"
+              :key="sub.name"
+              :to="sub.to"
+              class="block py-2.5 pl-4 font-heading text-[13px] font-medium no-underline"
+              :class="isActive(sub.name) ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)]'"
+              @click="closeMobileMenu"
+            >
+              <span class="flex items-center justify-between">
+                {{ sub.label }}
+                <span v-if="isActive(sub.name)" class="w-2 h-2 rounded-full bg-[var(--color-accent)]" />
+              </span>
+            </RouterLink>
+          </div>
+          <!-- Remaining links -->
+          <RouterLink
+            v-for="link in navLinks.slice(1)"
             :key="link.name"
             :to="link.to"
             class="block py-3 font-heading text-sm font-bold uppercase tracking-[0.04em] no-underline border-b border-[var(--color-border)] last:border-b-0"
@@ -236,21 +331,17 @@ onMounted(() => {
               Navigation
             </h4>
             <ul class="space-y-3">
-              <li v-for="link in navLinks" :key="link.name">
-                <RouterLink
-                  :to="link.to"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  {{ link.label }}
-                </RouterLink>
+              <li>
+                <RouterLink to="/" class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium">Accueil</RouterLink>
+              </li>
+              <li v-for="sub in partiSubLinks" :key="sub.name">
+                <RouterLink :to="sub.to" class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium">{{ sub.label }}</RouterLink>
+              </li>
+              <li v-for="link in navLinks.slice(1)" :key="link.name">
+                <RouterLink :to="link.to" class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium">{{ link.label }}</RouterLink>
               </li>
               <li>
-                <RouterLink
-                  to="/adherer"
-                  class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium"
-                >
-                  Adhérer
-                </RouterLink>
+                <RouterLink to="/adherer" class="text-sm text-white/70 no-underline hover:text-white transition-colors font-medium">Adhérer</RouterLink>
               </li>
             </ul>
           </div>
