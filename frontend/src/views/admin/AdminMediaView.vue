@@ -84,6 +84,8 @@ const formDefaults = {
   title: '',
   description: '',
   source_url: '',
+  platform: '' as string,
+  embed_type: '' as string,
   category: '',
   is_featured: false,
   is_active: true,
@@ -91,6 +93,26 @@ const formDefaults = {
 }
 const form = ref({ ...formDefaults })
 const editId = ref<string | null>(null)
+
+const embedTypeOptions = [
+  { label: 'Vidéo', value: 'video' },
+  { label: 'Publication', value: 'post' },
+]
+
+function detectPlatformFromUrl(url: string) {
+  const lower = url.toLowerCase()
+  if (lower.includes('facebook.com') || lower.includes('fb.watch')) {
+    form.value.platform = 'facebook'
+    if (/\/(posts|share\/p)\//.test(lower) || lower.includes('plugins/post')) {
+      form.value.embed_type = 'post'
+    } else {
+      form.value.embed_type = 'video'
+    }
+  } else if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+    form.value.platform = 'youtube'
+    form.value.embed_type = 'video'
+  }
+}
 
 function openCreate() {
   dialogMode.value = 'create'
@@ -105,6 +127,8 @@ function openEdit(m: AdminMediaContent) {
     title: m.title,
     description: m.description,
     source_url: m.source_url,
+    platform: m.platform,
+    embed_type: m.embed_type,
     category: m.category,
     is_featured: m.is_featured,
     is_active: m.is_active,
@@ -119,22 +143,34 @@ async function saveMedia() {
     toast.error('Champs requis', 'Le titre et l\'URL sont obligatoires.')
     return
   }
+  if (!form.value.published_at) {
+    toast.error('Champs requis', 'La date de publication est obligatoire.')
+    return
+  }
   saving.value = true
   try {
+    const payload = { ...form.value }
+    if (!payload.platform) delete (payload as Record<string, unknown>).platform
+    if (!payload.embed_type) delete (payload as Record<string, unknown>).embed_type
+
     if (dialogMode.value === 'create') {
-      await api.post('/admin/media/', form.value)
+      await api.post('/admin/media/', payload)
       toast.success('Média ajouté', 'Le contenu média a été créé.')
     } else {
-      await api.patch(`/admin/media/${editId.value}/`, form.value)
+      await api.patch(`/admin/media/${editId.value}/`, payload)
       toast.success('Média modifié', 'Les modifications ont été enregistrées.')
     }
     dialogOpen.value = false
     await fetchMedia()
   } catch (err: any) {
-    const detail = err?.response?.data?.source_url?.[0]
-      || err?.response?.data?.detail
-      || 'Une erreur est survenue.'
-    toast.error('Erreur', detail)
+    const data = err?.response?.data
+    if (data && typeof data === 'object') {
+      const firstField = Object.keys(data).find(k => Array.isArray(data[k]))
+      const detail = firstField ? data[firstField][0] : data.detail || 'Une erreur est survenue.'
+      toast.error('Erreur', detail)
+    } else {
+      toast.error('Erreur', 'Une erreur est survenue.')
+    }
   } finally {
     saving.value = false
   }
@@ -582,8 +618,39 @@ function clearFilters() {
                   placeholder="https://www.facebook.com/... ou https://youtube.com/..."
                   class="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] outline-none transition-all"
                   required
+                  @blur="detectPlatformFromUrl(form.source_url)"
                 />
-                <p class="text-[10px] text-gray-400 mt-1">La plateforme et le type seront détectés automatiquement.</p>
+                <p class="text-[10px] text-gray-400 mt-1">La plateforme et le type sont détectés automatiquement depuis l'URL.</p>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Plateforme <span class="text-red-400">*</span>
+                  </label>
+                  <select
+                    v-model="form.platform"
+                    class="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] outline-none transition-all"
+                    required
+                  >
+                    <option value="" disabled>Sélectionner...</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="youtube">YouTube</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Type de média <span class="text-red-400">*</span>
+                  </label>
+                  <select
+                    v-model="form.embed_type"
+                    class="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] outline-none transition-all"
+                    required
+                  >
+                    <option value="" disabled>Sélectionner...</option>
+                    <option v-for="opt in embedTypeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -617,16 +684,19 @@ function clearFilters() {
                   <input
                     v-model="form.category"
                     type="text"
-                    placeholder="Ex: Meetings, Interviews"
+                    placeholder="Ex: Meeting, Communiqué"
                     class="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Date de publication</label>
+                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                    Date de publication <span class="text-red-400">*</span>
+                  </label>
                   <input
                     v-model="form.published_at"
                     type="date"
                     class="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[var(--color-accent)]/20 focus:border-[var(--color-accent)] outline-none transition-all"
+                    required
                   />
                 </div>
               </div>

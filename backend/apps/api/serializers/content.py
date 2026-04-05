@@ -103,7 +103,10 @@ class AdminArticleDetailSerializer(serializers.ModelSerializer):
             "author", "author_name", "category", "category_name",
             "is_featured", "published_at", "deleted_at", "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "slug", "author_name", "category_name", "deleted_at", "created_at", "updated_at"]
+        read_only_fields = [
+            "id", "slug", "author", "author_name", "category_name",
+            "deleted_at", "created_at", "updated_at",
+        ]
 
 
 class AdminArticleCreateSerializer(serializers.ModelSerializer):
@@ -148,6 +151,9 @@ class AdminArticleCreateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        if not instance.author:
+            validated_data["author"] = self.context["request"].user
+
         old_status = instance.status
         new_status = validated_data.get("status", old_status)
 
@@ -212,6 +218,15 @@ def _detect_platform(url: str):
 
 
 class AdminMediaContentSerializer(serializers.ModelSerializer):
+    platform = serializers.ChoiceField(
+        choices=MediaContent.PlatformChoices.choices,
+        required=False, allow_blank=True,
+    )
+    embed_type = serializers.ChoiceField(
+        choices=MediaContent.EmbedTypeChoices.choices,
+        required=False, allow_blank=True,
+    )
+
     class Meta:
         model = MediaContent
         fields = [
@@ -231,14 +246,23 @@ class AdminMediaContentSerializer(serializers.ModelSerializer):
             value = _resolve_facebook_share_url(value)
         return value
 
-    def create(self, validated_data):
+    def _auto_fill_platform(self, validated_data):
+        """Auto-détecte platform/embed_type depuis l'URL si non fournis."""
         url = validated_data.get("source_url", "")
-        if not validated_data.get("platform"):
-            platform, embed_type = _detect_platform(url)
-            if platform:
-                validated_data["platform"] = platform
-                validated_data.setdefault("embed_type", embed_type)
+        platform, embed_type = _detect_platform(url)
+        if not validated_data.get("platform") and platform:
+            validated_data["platform"] = platform
+        if not validated_data.get("embed_type") and embed_type:
+            validated_data["embed_type"] = embed_type
+
+    def create(self, validated_data):
+        self._auto_fill_platform(validated_data)
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if "source_url" in validated_data:
+            self._auto_fill_platform(validated_data)
+        return super().update(instance, validated_data)
 
 
 # ===========================================================================

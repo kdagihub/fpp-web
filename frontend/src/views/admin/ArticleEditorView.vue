@@ -281,6 +281,9 @@ function openShareDialog() {
     image: article.value.cover_image ? getMediaUrl(article.value.cover_image) : undefined,
   })
 }
+
+/* ── Preview ── */
+const previewOpen = ref(false)
 </script>
 
 <template>
@@ -323,15 +326,14 @@ function openShareDialog() {
           <Send :size="14" />
           <span class="hidden sm:inline">Publier</span>
         </button>
-        <a
-          v-if="article?.status === 'published'"
-          :href="`/actualites/${article.slug}`"
-          target="_blank"
-          class="inline-flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-200 text-gray-500 hover:text-green-600 hover:border-green-200 transition-all no-underline"
-          title="Voir sur le site"
+        <button
+          v-if="isEditing"
+          @click="previewOpen = true"
+          class="inline-flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg border border-gray-200 text-gray-500 hover:text-green-600 hover:border-green-200 transition-all cursor-pointer bg-transparent"
+          title="Aperçu"
         >
           <Eye :size="14" />
-        </a>
+        </button>
         <button
           v-if="article?.status === 'published'"
           @click="openShareDialog"
@@ -665,6 +667,84 @@ function openShareDialog() {
       </div>
       <div class="lg:hidden h-20" />
     </template>
+
+    <!-- ═══ Preview Modal ═══ -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="previewOpen"
+          class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm"
+          @click.self="previewOpen = false"
+        >
+          <div class="bg-white w-full sm:rounded-2xl sm:max-w-3xl sm:w-full shadow-xl rounded-t-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <h3 class="font-heading text-base font-bold text-gray-900">Aperçu</h3>
+              <button
+                @click="previewOpen = false"
+                class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer bg-transparent border-none"
+              >
+                <X :size="18" />
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-y-auto">
+              <!-- Cover -->
+              <div v-if="displayCover" class="w-full aspect-[21/9] bg-gray-100">
+                <img :src="displayCover" :alt="form.title" class="w-full h-full object-cover" />
+              </div>
+
+              <div class="px-5 sm:px-8 py-5 sm:py-6">
+                <!-- Title -->
+                <h2 class="font-heading text-xl sm:text-2xl font-bold text-gray-900 leading-snug mb-3">
+                  {{ form.title || 'Sans titre' }}
+                </h2>
+
+                <!-- Summary -->
+                <p v-if="form.summary" class="text-sm text-gray-500 leading-relaxed mb-5 pb-5 border-b border-gray-100">
+                  {{ form.summary }}
+                </p>
+
+                <!-- Content -->
+                <div
+                  class="prose prose-sm max-w-none text-gray-800
+                    [&_h2]:font-heading [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3
+                    [&_h3]:font-heading [&_h3]:text-base [&_h3]:font-bold [&_h3]:mt-5 [&_h3]:mb-2
+                    [&_p]:text-gray-600 [&_p]:mb-4 [&_p]:leading-relaxed
+                    [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-gray-600
+                    [&_a]:text-green-600 [&_a]:underline
+                    [&_blockquote]:border-l-4 [&_blockquote]:border-green-400 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-500
+                    [&_img]:rounded-xl [&_img]:my-4 [&_img]:max-w-full"
+                  v-html="form.content"
+                />
+
+                <p v-if="!form.content || form.content === '<p></p>'" class="text-sm text-gray-300 italic">
+                  Aucun contenu rédigé pour le moment.
+                </p>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-end shrink-0 bg-gray-50/60">
+              <button
+                @click="previewOpen = false"
+                class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- ═══ Share Dialog ═══ -->
     <ShareDialog

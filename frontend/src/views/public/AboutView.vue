@@ -109,7 +109,7 @@ const regions = [
           </p>
           <h1 class="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.05] mb-6">
             Le FPP, un parti<br>
-            <span class="text-[var(--color-accent)]">citoyen</span>
+            <span class="text-[var(--color-accent)]">Révolutionnaire</span>
           </h1>
           <p class="text-lg text-white/60 leading-relaxed max-w-lg">
             {{ settingsStore.settings?.about_text || 'Fondé en 2021, le Front Patriotique Panafricain rassemble des hommes et des femmes de tous horizons, unis par une même conviction : la Côte d\'Ivoire peut faire mieux, ensemble.' }}

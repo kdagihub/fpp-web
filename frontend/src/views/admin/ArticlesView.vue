@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useAppToast } from '@/composables/useToast'
 import api from '@/api'
 import { getMediaUrl } from '@/utils/media'
-import type { AdminArticleListItem, AdminCategory, PaginatedResponse } from '@/types'
+import type { AdminArticleListItem, AdminArticleDetail, AdminCategory, PaginatedResponse } from '@/types'
 import dayjs from 'dayjs'
 import 'dayjs/locale/fr'
 
@@ -101,6 +101,26 @@ const featuredCount = computed(() => articles.value.filter(a => a.is_featured).l
 const deleteTarget = ref<AdminArticleListItem | null>(null)
 const deleteOpen = ref(false)
 const deleting = ref(false)
+
+/* ── Preview ── */
+const previewOpen = ref(false)
+const previewLoading = ref(false)
+const previewArticle = ref<AdminArticleDetail | null>(null)
+
+async function openPreview(a: AdminArticleListItem) {
+  previewOpen.value = true
+  previewLoading.value = true
+  previewArticle.value = null
+  try {
+    const { data } = await api.get<AdminArticleDetail>(`/admin/articles/${a.id}/`)
+    previewArticle.value = data
+  } catch {
+    toast.error('Erreur', 'Impossible de charger l\'article.')
+    previewOpen.value = false
+  } finally {
+    previewLoading.value = false
+  }
+}
 
 /* ── Data fetching ── */
 async function fetchArticles() {
@@ -523,15 +543,13 @@ function sortIcon(field: string) {
                 >
                   <Edit3 :size="15" />
                 </RouterLink>
-                <a
-                  v-if="a.status === 'published'"
-                  :href="`/actualites/${a.slug}`"
-                  target="_blank"
-                  class="p-2 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-all"
-                  title="Voir sur le site"
+                <button
+                  @click="openPreview(a)"
+                  class="p-2 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-all cursor-pointer bg-transparent border-none"
+                  title="Voir l'article"
                 >
                   <Eye :size="15" />
-                </a>
+                </button>
                 <button
                   v-if="a.status === 'published'"
                   @click="openShareDialog(a)"
@@ -636,15 +654,13 @@ function sortIcon(field: string) {
               <Edit3 :size="13" />
               Modifier
             </RouterLink>
-            <a
-              v-if="a.status === 'published'"
-              :href="`/actualites/${a.slug}`"
-              target="_blank"
-              class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-gray-500 hover:text-green-600 hover:bg-green-50/50 transition-all no-underline"
+            <button
+              @click="openPreview(a)"
+              class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-gray-500 hover:text-green-600 hover:bg-green-50/50 transition-all cursor-pointer bg-transparent border-none"
             >
               <Eye :size="13" />
               Voir
-            </a>
+            </button>
             <button
               v-if="a.status === 'published'"
               @click="openShareDialog(a)"
@@ -724,6 +740,129 @@ function sortIcon(field: string) {
                 <Loader2 v-if="deleting" :size="14" class="animate-spin" />
                 Supprimer
               </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ═══ Preview Modal ═══ -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-150"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="previewOpen"
+          class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm"
+          @click.self="previewOpen = false"
+        >
+          <div class="bg-white w-full sm:rounded-2xl sm:max-w-3xl sm:w-full shadow-xl rounded-t-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+              <div class="flex items-center gap-3 min-w-0">
+                <h3 class="font-heading text-base font-bold text-gray-900 truncate">Aperçu de l'article</h3>
+                <Tag
+                  v-if="previewArticle"
+                  :value="statusLabel(previewArticle.status)"
+                  :severity="statusSeverity(previewArticle.status)"
+                  class="!text-[9px] !font-bold !uppercase !tracking-wider !px-1.5 !py-0.5 shrink-0"
+                />
+              </div>
+              <button
+                @click="previewOpen = false"
+                class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors cursor-pointer bg-transparent border-none shrink-0"
+              >
+                <X :size="18" />
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-y-auto">
+              <!-- Loading -->
+              <div v-if="previewLoading" class="p-8 space-y-4 animate-pulse">
+                <div class="h-6 bg-gray-100 rounded w-3/4" />
+                <div class="h-4 bg-gray-100 rounded w-full" />
+                <div class="h-48 bg-gray-100 rounded-xl w-full" />
+                <div class="h-4 bg-gray-100 rounded w-full" />
+                <div class="h-4 bg-gray-100 rounded w-2/3" />
+              </div>
+
+              <template v-else-if="previewArticle">
+                <!-- Cover -->
+                <div v-if="previewArticle.cover_image" class="w-full aspect-[21/9] bg-gray-100">
+                  <img
+                    :src="getMediaUrl(previewArticle.cover_image)"
+                    :alt="previewArticle.title"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div class="px-5 sm:px-8 py-5 sm:py-6">
+                  <!-- Category + date -->
+                  <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 mb-3">
+                    <span v-if="previewArticle.category_name" class="px-2 py-0.5 bg-green-50 text-green-700 font-semibold rounded text-[10px] uppercase tracking-wide">
+                      {{ previewArticle.category_name }}
+                    </span>
+                    <span v-if="previewArticle.author_name">{{ previewArticle.author_name }}</span>
+                    <span>{{ formatDate(previewArticle.published_at || previewArticle.created_at) }}</span>
+                  </div>
+
+                  <!-- Title -->
+                  <h2 class="font-heading text-xl sm:text-2xl font-bold text-gray-900 leading-snug mb-3">
+                    {{ previewArticle.title }}
+                  </h2>
+
+                  <!-- Summary -->
+                  <p class="text-sm text-gray-500 leading-relaxed mb-5 pb-5 border-b border-gray-100">
+                    {{ previewArticle.summary }}
+                  </p>
+
+                  <!-- Content -->
+                  <div
+                    class="prose prose-sm max-w-none text-gray-800
+                      [&_h2]:font-heading [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3
+                      [&_h3]:font-heading [&_h3]:text-base [&_h3]:font-bold [&_h3]:mt-5 [&_h3]:mb-2
+                      [&_p]:text-gray-600 [&_p]:mb-4 [&_p]:leading-relaxed
+                      [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_li]:text-gray-600
+                      [&_a]:text-green-600 [&_a]:underline
+                      [&_blockquote]:border-l-4 [&_blockquote]:border-green-400 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-500
+                      [&_img]:rounded-xl [&_img]:my-4 [&_img]:max-w-full"
+                    v-html="previewArticle.content"
+                  />
+                </div>
+              </template>
+            </div>
+
+            <!-- Footer -->
+            <div v-if="previewArticle" class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between gap-3 shrink-0 bg-gray-50/60">
+              <div class="text-[11px] text-gray-400">
+                Créé {{ formatDate(previewArticle.created_at) }}
+                <template v-if="previewArticle.updated_at"> · Modifié {{ formatDate(previewArticle.updated_at) }}</template>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="previewArticle.status === 'published'"
+                  @click="previewOpen = false; openShareDialog(previewArticle)"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors cursor-pointer border-none"
+                >
+                  <Share2 :size="13" />
+                  Partager
+                </button>
+                <RouterLink
+                  v-if="canEdit"
+                  :to="`/admin/articles/${previewArticle.id}/edit`"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[var(--color-accent)] rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors no-underline"
+                  @click="previewOpen = false"
+                >
+                  <Edit3 :size="13" />
+                  Modifier
+                </RouterLink>
+              </div>
             </div>
           </div>
         </div>
