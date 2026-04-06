@@ -284,23 +284,23 @@ onMounted(fetchDocs)
             <p v-if="doc.description" class="text-xs text-[var(--color-muted)] leading-relaxed mb-4 line-clamp-2 flex-1">{{ doc.description }}</p>
             <div v-else class="flex-1" />
 
-            <div class="flex items-center justify-between pt-3 border-t border-[var(--color-border)]">
-              <span class="text-xs text-[var(--color-muted)]">{{ dayjs(doc.created_at).format('DD MMM YYYY') }}</span>
-              <div class="flex items-center gap-1.5">
+            <div class="pt-3 border-t border-[var(--color-border)] space-y-2">
+              <span class="block text-xs text-[var(--color-muted)]">{{ dayjs(doc.created_at).format('DD MMM YYYY') }}</span>
+              <div class="flex flex-col gap-1.5">
                 <button
                   @click="openPreview(doc)"
-                  class="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-accent)] px-2.5 py-1.5 rounded-full hover:bg-[var(--color-accent-light)] transition-all cursor-pointer"
-                  title="Aperçu"
+                  class="w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-[var(--color-muted)] hover:text-[var(--color-accent)] px-3 py-2 rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-light)] transition-all cursor-pointer"
                 >
-                  <Eye :size="13" />
+                  <Eye :size="14" />
+                  Aperçu
                 </button>
                 <a
                   :href="doc.file_url"
                   target="_blank"
                   @click="trackDownload(doc)"
-                  class="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-accent)] px-3 py-1.5 rounded-full bg-[var(--color-accent-light)] hover:bg-[var(--color-accent)] hover:text-white transition-all no-underline"
+                  class="w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-[var(--color-accent)] px-3 py-2 rounded-lg hover:bg-[var(--color-accent-hover)] transition-all no-underline"
                 >
-                  <Download :size="13" />
+                  <Download :size="14" />
                   Télécharger
                 </a>
               </div>
@@ -312,7 +312,7 @@ onMounted(fetchDocs)
       <!-- ═══ LIST VIEW ═══ -->
       <div v-else class="bg-white rounded-2xl border border-[var(--color-border)] overflow-hidden">
         <!-- Desktop table -->
-        <div class="hidden sm:block overflow-x-auto">
+        <div class="hidden lg:block overflow-x-auto">
           <table class="w-full text-sm">
             <thead class="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
               <tr>
@@ -378,27 +378,58 @@ onMounted(fetchDocs)
           </table>
         </div>
 
-        <!-- Mobile list -->
-        <div class="sm:hidden divide-y divide-[var(--color-border)]">
-          <div v-for="doc in filtered" :key="doc.id" class="p-4 flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-              :class="kindStyle[getFileKind(doc.file_url)].icon"
-            >
-              <component :is="fileIcon(doc.file_url)" :size="20" class="text-white" />
+        <!-- Mobile + tablet cards -->
+        <div class="lg:hidden space-y-3 p-3">
+          <div
+            v-for="doc in filtered"
+            :key="doc.id"
+            class="bg-white rounded-xl border border-[var(--color-border)] overflow-hidden transition-all hover:shadow-md"
+          >
+            <div class="p-4 pb-3">
+              <div class="flex items-start gap-3">
+                <div
+                  class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0"
+                  :class="kindStyle[getFileKind(doc.file_url)].icon"
+                >
+                  <component :is="fileIcon(doc.file_url)" :size="22" class="text-white" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-sm font-bold text-[var(--color-primary)] truncate">{{ doc.title }}</h3>
+                  <p v-if="doc.description" class="text-xs text-[var(--color-muted)] mt-0.5 line-clamp-2">{{ doc.description }}</p>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <span class="text-xs font-medium text-[var(--color-muted)]">{{ categoryLabel[doc.category] ?? doc.category }}</span>
+                    <span class="opacity-30">&middot;</span>
+                    <span
+                      class="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded"
+                      :class="kindStyle[getFileKind(doc.file_url)].bg + ' ' + kindStyle[getFileKind(doc.file_url)].accent"
+                    >
+                      {{ fileExt(doc.file_url) }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1 text-[11px] text-[var(--color-muted)]">
+                    <span>{{ formatSize(doc.file_size) }}</span>
+                    <span class="opacity-30">&middot;</span>
+                    <span>{{ dayjs(doc.created_at).format('DD MMM YYYY') }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="min-w-0 flex-1">
-              <p class="font-semibold text-[var(--color-primary)] text-sm truncate">{{ doc.title }}</p>
-              <p class="text-[11px] text-[var(--color-muted)]">
-                {{ fileExt(doc.file_url) }} &middot; {{ formatSize(doc.file_size) }} &middot; {{ dayjs(doc.created_at).format('DD MMM YYYY') }}
-              </p>
-            </div>
-            <div class="flex items-center gap-0.5 shrink-0">
-              <button @click="openPreview(doc)" class="p-2 text-[var(--color-muted)] hover:text-[var(--color-accent)] cursor-pointer" title="Aperçu">
-                <Eye :size="18" />
+            <div class="flex items-center border-t border-[var(--color-border)]/50 divide-x divide-[var(--color-border)]/50">
+              <button
+                @click="openPreview(doc)"
+                class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-light)]/50 transition-all cursor-pointer"
+              >
+                <Eye :size="13" />
+                Aperçu
               </button>
-              <a :href="doc.file_url" target="_blank" @click="trackDownload(doc)" class="p-2 text-[var(--color-accent)] no-underline" title="Télécharger">
-                <Download :size="18" />
+              <a
+                :href="doc.file_url"
+                target="_blank"
+                @click="trackDownload(doc)"
+                class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-[var(--color-accent)] hover:bg-[var(--color-accent-light)]/50 transition-all no-underline"
+              >
+                <Download :size="13" />
+                Télécharger
               </a>
             </div>
           </div>

@@ -369,7 +369,7 @@ async function confirmDelete() {
     </div>
 
     <!-- Table (desktop) -->
-    <div v-else class="bg-white rounded-xl border border-[var(--color-border)] overflow-hidden hidden sm:block">
+    <div v-else class="bg-white rounded-xl border border-[var(--color-border)] overflow-hidden hidden lg:block">
       <table class="w-full text-sm">
         <thead class="bg-[var(--color-surface)] border-b border-[var(--color-border)]">
           <tr>
@@ -426,45 +426,76 @@ async function confirmDelete() {
       </table>
     </div>
 
-    <!-- Cards (mobile) -->
-    <div v-if="!loading && filtered.length" class="sm:hidden space-y-3">
-      <div v-for="doc in filtered" :key="doc.id" class="bg-white rounded-xl border border-[var(--color-border)] p-4">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" :class="kindColor[getFileKind(doc.file_url)]">
-            <component :is="fileIcon(doc.file_url)" :size="20" class="text-white" />
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="font-semibold text-[var(--color-primary)] text-sm truncate">{{ doc.title }}</p>
-            <div class="flex items-center gap-2 mt-1 flex-wrap">
-              <Tag :value="categoryLabel[doc.category] ?? doc.category" :severity="(categorySeverity[doc.category] as any) ?? 'secondary'" class="text-[10px]" />
-              <span class="flex items-center gap-1 text-[10px]" :class="doc.is_public ? 'text-green-600' : 'text-amber-500'">
-                <Globe v-if="doc.is_public" :size="10" /> <Lock v-else :size="10" />
-                {{ doc.is_public ? 'Public' : 'Privé' }}
-              </span>
-              <span class="text-[10px] text-[var(--color-muted)]">{{ formatSize(doc.file_size) }}</span>
+    <!-- Cards (mobile + tablet) -->
+    <div v-if="!loading && filtered.length" class="lg:hidden space-y-3">
+      <div
+        v-for="doc in filtered"
+        :key="doc.id"
+        class="bg-white rounded-xl border border-[var(--color-border)] overflow-hidden transition-all hover:shadow-[var(--shadow-sm)]"
+      >
+        <!-- Card header -->
+        <div class="p-4 pb-3">
+          <div class="flex items-start gap-3">
+            <div class="w-11 h-11 rounded-lg flex items-center justify-center shrink-0" :class="kindColor[getFileKind(doc.file_url)]">
+              <component :is="fileIcon(doc.file_url)" :size="22" class="text-white" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="text-sm font-bold text-[var(--color-primary)] truncate">{{ doc.title }}</h3>
+                <span class="flex items-center gap-1 text-[10px] font-semibold shrink-0 px-1.5 py-0.5 rounded-full" :class="doc.is_public ? 'text-green-600 bg-green-50' : 'text-amber-600 bg-amber-50'">
+                  <Globe v-if="doc.is_public" :size="10" />
+                  <Lock v-else :size="10" />
+                  {{ doc.is_public ? 'Public' : 'Privé' }}
+                </span>
+              </div>
+              <p v-if="doc.description" class="text-xs text-[var(--color-muted)] mt-0.5 truncate">{{ doc.description }}</p>
+              <div class="flex items-center gap-2 mt-1.5">
+                <Tag :value="categoryLabel[doc.category] ?? doc.category" :severity="(categorySeverity[doc.category] as any) ?? 'secondary'" class="!text-[9px] !font-bold !uppercase !tracking-wider !px-2 !py-0.5" />
+                <span class="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-muted)]">{{ fileExt(doc.file_url) }}</span>
+              </div>
+              <div class="flex items-center gap-2 mt-1.5 text-[11px] text-[var(--color-muted)]">
+                <span>{{ formatSize(doc.file_size) }}</span>
+                <span class="opacity-30">&middot;</span>
+                <span>{{ dayjs(doc.created_at).format('DD MMM YYYY') }}</span>
+                <span class="opacity-30">&middot;</span>
+                <span>{{ doc.download_count }} DL</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border)]">
-          <span class="text-xs text-[var(--color-muted)]">{{ dayjs(doc.created_at).format('DD MMM YYYY') }} &middot; {{ doc.download_count }} DL</span>
-          <div class="flex items-center gap-1">
-            <button @click="openView(doc)" class="p-1.5 rounded-lg hover:bg-blue-50 text-[var(--color-muted)] hover:text-blue-600 cursor-pointer" title="Voir">
-              <Eye :size="15" />
-            </button>
-            <button @click="toggleVisibility(doc)" class="p-1.5 rounded-lg hover:bg-[var(--color-surface)] cursor-pointer" :title="doc.is_public ? 'Rendre privé' : 'Rendre public'">
-              <Globe v-if="doc.is_public" :size="15" class="text-green-600" />
-              <EyeOff v-else :size="15" class="text-amber-500" />
-            </button>
-            <a v-if="doc.file_url" :href="doc.file_url" target="_blank" class="p-1.5 rounded-lg hover:bg-[var(--color-surface)] text-blue-600">
-              <Download :size="15" />
-            </a>
-            <button @click="openEdit(doc)" class="p-1.5 rounded-lg hover:bg-[var(--color-surface)] text-[var(--color-accent)] cursor-pointer">
-              <Edit3 :size="15" />
-            </button>
-            <button @click="deleteTarget = doc" class="p-1.5 rounded-lg hover:bg-red-50 text-red-500 cursor-pointer">
-              <Trash2 :size="15" />
-            </button>
-          </div>
+
+        <!-- Card actions bar -->
+        <div class="flex items-center border-t border-[var(--color-border)]/50 divide-x divide-[var(--color-border)]/50">
+          <button
+            @click="openView(doc)"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-[var(--color-muted)] hover:text-blue-600 hover:bg-blue-50/50 transition-all cursor-pointer bg-transparent border-none"
+          >
+            <Eye :size="13" />
+            Voir
+          </button>
+          <button
+            @click="toggleVisibility(doc)"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold transition-all cursor-pointer bg-transparent border-none"
+            :class="doc.is_public ? 'text-green-600 hover:bg-green-50/50' : 'text-amber-500 hover:bg-amber-50/50'"
+          >
+            <Globe v-if="doc.is_public" :size="13" />
+            <EyeOff v-else :size="13" />
+            {{ doc.is_public ? 'Public' : 'Privé' }}
+          </button>
+          <button
+            @click="openEdit(doc)"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-[var(--color-muted)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-light)]/50 transition-all cursor-pointer bg-transparent border-none"
+          >
+            <Edit3 :size="13" />
+            Modifier
+          </button>
+          <button
+            @click="deleteTarget = doc"
+            class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-[var(--color-muted)] hover:text-red-600 hover:bg-red-50/50 transition-all cursor-pointer bg-transparent border-none"
+          >
+            <Trash2 :size="13" />
+            Suppr.
+          </button>
         </div>
       </div>
     </div>
